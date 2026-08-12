@@ -55,8 +55,10 @@ model Customer {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  leads Lead[]
-  jobs  Job[]
+  leads    Lead[]
+  jobs     Job[]
+  invoices Invoice[]
+  payments Payment[]
 
   @@index([phone])
   @@index([email])
@@ -139,8 +141,177 @@ model Job {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  invoice Invoice?
+
   @@index([customerId])
   @@index([status])
   @@index([scheduledDate])
   @@map("jobs")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  E_TRANSFER
+  CREDIT_CARD
+  DEBIT
+  CHEQUE
+  OTHER
+}
+
+enum ExpenseCategory {
+  META_ADS
+  GOOGLE_ADS
+  GOOGLE_LSA
+  GAS
+  EQUIPMENT
+  TOOLS
+  SUPPLIES
+  VEHICLE
+  INSURANCE
+  WEBSITE
+  HOSTING
+  SOFTWARE
+  PRINTING
+  FLYERS
+  DOOR_HANGERS
+  YARD_SIGNS
+  SUBCONTRACTORS
+  PAYROLL
+  BANK_FEES
+  PHONE
+  OTHER
+}
+
+enum MarketingPlatform {
+  META_ADS
+  FACEBOOK_MARKETPLACE
+  GOOGLE_ADS
+  GOOGLE_LSA
+  FLYERS
+  DOOR_HANGERS
+  YARD_SIGNS
+  OTHER
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique @map("invoice_number")
+  customerId    String        @map("customer_id")
+  customer      Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  jobId         String?       @unique @map("job_id")
+  job           Job?          @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  invoiceDate   DateTime      @default(now()) @map("invoice_date")
+  dueDate       DateTime?     @map("due_date")
+  description   String
+  quantity      Decimal       @default(1) @db.Decimal(10, 2)
+  unitPrice     Decimal       @map("unit_price") @db.Decimal(10, 2)
+  subtotal      Decimal       @db.Decimal(10, 2)
+  discount      Decimal       @default(0) @db.Decimal(10, 2)
+  taxLabel      String        @default("No Tax") @map("tax_label")
+  taxRate       Decimal       @default(0) @map("tax_rate") @db.Decimal(5, 2)
+  taxAmount     Decimal       @default(0) @map("tax_amount") @db.Decimal(10, 2)
+  total         Decimal       @db.Decimal(10, 2)
+  notes         String?
+  status        InvoiceStatus @default(DRAFT)
+  archivedAt    DateTime?     @map("archived_at")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  payments      Payment[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([invoiceDate])
+  @@map("invoices")
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  invoiceId       String        @map("invoice_id")
+  invoice         Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  customerId      String        @map("customer_id")
+  customer        Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  paymentDate     DateTime      @default(now()) @map("payment_date")
+  amount          Decimal       @db.Decimal(10, 2)
+  method          PaymentMethod
+  referenceNumber String?       @map("reference_number")
+  notes           String?
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([paymentDate])
+  @@map("payments")
+}
+
+model Expense {
+  id              String          @id @default(cuid())
+  date            DateTime
+  vendor          String?
+  category        ExpenseCategory
+  description     String?
+  amountBeforeTax Decimal         @map("amount_before_tax") @db.Decimal(10, 2)
+  taxPaid         Decimal         @default(0) @map("tax_paid") @db.Decimal(10, 2)
+  total           Decimal         @db.Decimal(10, 2)
+  paymentMethod   PaymentMethod?  @map("payment_method")
+  receiptUrl      String?         @map("receipt_url")
+  notes           String?
+  archivedAt      DateTime?       @map("archived_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([date])
+  @@map("expenses")
+}
+
+model MarketingSpend {
+  id           String            @id @default(cuid())
+  date         DateTime
+  platform     MarketingPlatform
+  campaignName String?           @map("campaign_name")
+  amount       Decimal           @db.Decimal(10, 2)
+  notes        String?
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  @@index([platform])
+  @@index([date])
+  @@map("marketing_spend")
+}
+
+model BusinessSettings {
+  id                   String   @id @default(cuid())
+  businessName         String   @default("Ironmark Exteriors") @map("business_name")
+  logoUrl              String?  @map("logo_url")
+  phone                String?
+  email                String?
+  website              String?
+  address              String?
+  city                 String?
+  province             String?  @default("Ontario")
+  postalCode           String?  @map("postal_code")
+  taxNumber            String?  @map("tax_number")
+  defaultTaxLabel      String   @default("13% HST") @map("default_tax_label")
+  defaultTaxRate       Decimal  @default(13) @map("default_tax_rate") @db.Decimal(5, 2)
+  invoiceFooterMessage String?  @map("invoice_footer_message")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("business_settings")
+}
+
+model ServiceReminderInterval {
+  id      String @id @default(cuid())
+  service String @unique
+  months  Int
+
+  @@map("service_reminder_intervals")
 }
