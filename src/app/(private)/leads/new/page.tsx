@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { customerFullName } from "@/lib/customers";
 import LeadForm from "@/components/leads/LeadForm";
@@ -13,7 +14,19 @@ export default async function NewLeadPage({ searchParams }: { searchParams: Sear
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">Add Lead</h1>
+      {preselected ? (
+        <Link
+          href={`/customers/${preselected.id}`}
+          className="text-sm font-medium text-ink-900/50 hover:text-ink-900"
+        >
+          ← Back to {customerFullName(preselected)}
+        </Link>
+      ) : (
+        <Link href="/leads" className="text-sm font-medium text-ink-900/50 hover:text-ink-900">
+          ← Back to Leads
+        </Link>
+      )}
+      <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-ink-900">Add Lead</h1>
       <p className="mt-1 text-sm text-ink-900/60">
         New leads default to <span className="font-semibold">New</span> status.
       </p>
