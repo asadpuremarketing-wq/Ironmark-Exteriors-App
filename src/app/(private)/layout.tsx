@@ -1,9 +1,15 @@
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import Sidebar from "@/components/Sidebar";
 import LogoutButton from "@/components/LogoutButton";
 
 export default async function PrivateLayout({ children }: { children: React.ReactNode }) {
+  // This is the real access-control check for every private page — the
+  // proxy (src/proxy.ts) only provides a fast edge-level redirect for UX.
   const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
 
   return (
     <div className="flex min-h-screen">
