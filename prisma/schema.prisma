@@ -55,8 +55,45 @@ model Customer {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  leads Lead[]
+
   @@index([phone])
   @@index([email])
   @@index([lastName, firstName])
   @@map("customers")
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUOTE_NEEDED
+  QUOTE_SENT
+  FOLLOW_UP
+  BOOKED
+  LOST
+  NO_RESPONSE
+}
+
+model Lead {
+  id               String     @id @default(cuid())
+  customerId       String     @map("customer_id")
+  customer         Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  serviceRequested String     @map("service_requested")
+  // Lead source is a plain string (validated against a curated list in
+  // app code, see src/lib/leads.ts) rather than a DB enum, so new sources
+  // can be added later without a migration.
+  leadSource       String     @map("lead_source")
+  estimatedValue   Decimal?   @map("estimated_value") @db.Decimal(10, 2)
+  status           LeadStatus @default(NEW)
+  dateReceived     DateTime   @default(now()) @map("date_received")
+  followUpDate     DateTime?  @map("follow_up_date")
+  notes            String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([status])
+  @@index([followUpDate])
+  @@map("leads")
 }

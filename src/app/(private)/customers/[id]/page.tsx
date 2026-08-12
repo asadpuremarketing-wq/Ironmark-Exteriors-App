@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { customerFullName, STATUS_LABELS, STATUS_STYLES } from "@/lib/customers";
+import { STATUS_LABELS as LEAD_STATUS_LABELS, STATUS_STYLES as LEAD_STATUS_STYLES } from "@/lib/leads";
 import QuickActions from "@/components/customers/QuickActions";
 import DeleteCustomerButton from "@/components/customers/DeleteCustomerButton";
 
@@ -24,11 +25,17 @@ const placeholders = [
   { title: "Service History", description: "A timeline of completed services will appear here." },
 ];
 
+function formatMoney(value: unknown) {
+  if (value === null || value === undefined) return "—";
+  return Number(value).toLocaleString("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 });
+}
+
 export default async function CustomerProfilePage({ params }: { params: Params }) {
   const { id } = await params;
-  const [customer, session] = await Promise.all([
+  const [customer, session, leads] = await Promise.all([
     prisma.customer.findUnique({ where: { id } }),
     auth(),
+    prisma.lead.findMany({ where: { customerId: id }, orderBy: { createdAt: "desc" } }),
   ]);
   if (!customer) notFound();
 
@@ -144,6 +151,54 @@ export default async function CustomerProfilePage({ params }: { params: Params }
           )}
         </section>
       </div>
+
+      <section className="mt-6 rounded-2xl border border-ink-900/10 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-ink-900/50">
+            Leads ({leads.length})
+          </h2>
+          <Link
+            href={`/leads/new?customerId=${customer.id}`}
+            className="text-sm font-semibold text-brand-electric hover:underline"
+          >
+            + Add Lead
+          </Link>
+        </div>
+
+        {leads.length === 0 ? (
+          <p className="text-sm text-ink-900/40">No leads yet for this customer.</p>
+        ) : (
+          <div className="flex flex-col divide-y divide-ink-900/5">
+            {leads.map((lead) => (
+              <Link
+                key={lead.id}
+                href={`/leads/${lead.id}`}
+                className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm transition hover:bg-brand-electric/[0.03]"
+              >
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-ink-900/60">
+                    {new Date(lead.dateReceived).toLocaleDateString("en-CA", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                  <span className="font-semibold text-ink-900">{lead.serviceRequested}</span>
+                  <span className="text-ink-900/50">{lead.leadSource}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-ink-900/70">{formatMoney(lead.estimatedValue)}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${LEAD_STATUS_STYLES[lead.status]}`}
+                  >
+                    {LEAD_STATUS_LABELS[lead.status]}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {placeholders.map((p) => (
