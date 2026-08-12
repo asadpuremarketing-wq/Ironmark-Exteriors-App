@@ -18,7 +18,10 @@ function formatMoney(value: unknown) {
 
 export default async function LeadDetailPage({ params }: { params: Params }) {
   const { id } = await params;
-  const lead = await prisma.lead.findUnique({ where: { id }, include: { customer: true } });
+  const [lead, job] = await Promise.all([
+    prisma.lead.findUnique({ where: { id }, include: { customer: true } }),
+    prisma.job.findUnique({ where: { leadId: id } }),
+  ]);
   if (!lead) notFound();
 
   const { customer } = lead;
@@ -71,12 +74,32 @@ export default async function LeadDetailPage({ params }: { params: Params }) {
           </Link>
           <Link
             href={`/leads/${lead.id}/edit`}
-            className="inline-flex items-center gap-2 rounded-lg bg-brand-electric px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-electric-light"
+            className="inline-flex items-center gap-2 rounded-lg bg-ink-950 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-ink-800"
           >
             Edit Lead
           </Link>
+          {!job && (
+            <Link
+              href={`/jobs/new?leadId=${lead.id}`}
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-electric px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-electric-light"
+            >
+              Book Job
+            </Link>
+          )}
         </div>
       </div>
+
+      {job && (
+        <Link
+          href={`/jobs/${job.id}`}
+          className="mt-4 flex items-center justify-between rounded-xl border border-green-200 bg-green-50 px-5 py-3.5 transition hover:bg-green-100"
+        >
+          <span className="text-sm font-bold text-green-900">
+            Booked Job: <span className="font-mono">{job.jobNumber}</span>
+          </span>
+          <span className="text-sm font-semibold text-green-700">View Job →</span>
+        </Link>
+      )}
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
         <section className="rounded-2xl border border-ink-900/10 bg-white p-6 shadow-sm">

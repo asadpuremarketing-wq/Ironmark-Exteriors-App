@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { customerFullName, STATUS_LABELS, STATUS_STYLES } from "@/lib/customers";
 import { STATUS_LABELS as LEAD_STATUS_LABELS, STATUS_STYLES as LEAD_STATUS_STYLES } from "@/lib/leads";
+import { STATUS_LABELS as JOB_STATUS_LABELS, STATUS_STYLES as JOB_STATUS_STYLES } from "@/lib/jobs";
 import QuickActions from "@/components/customers/QuickActions";
 import DeleteCustomerButton from "@/components/customers/DeleteCustomerButton";
 
@@ -18,7 +19,6 @@ function formatDate(date: Date) {
 }
 
 const placeholders = [
-  { title: "Jobs", description: "Job history will appear here once the Jobs module is built." },
   { title: "Invoices", description: "Invoices will appear here once the Invoices module is built." },
   { title: "Payments", description: "Payment history will appear here once Payments is built." },
   { title: "Revenue", description: "Lifetime revenue from this customer will be calculated here." },
@@ -32,10 +32,11 @@ function formatMoney(value: unknown) {
 
 export default async function CustomerProfilePage({ params }: { params: Params }) {
   const { id } = await params;
-  const [customer, session, leads] = await Promise.all([
+  const [customer, session, leads, jobs] = await Promise.all([
     prisma.customer.findUnique({ where: { id } }),
     auth(),
     prisma.lead.findMany({ where: { customerId: id }, orderBy: { createdAt: "desc" } }),
+    prisma.job.findMany({ where: { customerId: id }, orderBy: { scheduledDate: "desc" } }),
   ]);
   if (!customer) notFound();
 
@@ -192,6 +193,57 @@ export default async function CustomerProfilePage({ params }: { params: Params }
                     className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${LEAD_STATUS_STYLES[lead.status]}`}
                   >
                     {LEAD_STATUS_LABELS[lead.status]}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-ink-900/10 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-ink-900/50">
+            Jobs ({jobs.length})
+          </h2>
+          <Link
+            href={`/jobs/new?customerId=${customer.id}`}
+            className="text-sm font-semibold text-brand-electric hover:underline"
+          >
+            + Add Job
+          </Link>
+        </div>
+
+        {jobs.length === 0 ? (
+          <p className="text-sm text-ink-900/40">No jobs yet for this customer.</p>
+        ) : (
+          <div className="flex flex-col divide-y divide-ink-900/5">
+            {jobs.map((job) => (
+              <Link
+                key={job.id}
+                href={`/jobs/${job.id}`}
+                className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm transition hover:bg-brand-electric/[0.03]"
+              >
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="font-mono text-xs text-ink-900/50">{job.jobNumber}</span>
+                  <span className="text-ink-900/60">
+                    {new Date(job.scheduledDate).toLocaleDateString("en-CA", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </span>
+                  <span className="font-semibold text-ink-900">{job.service}</span>
+                  <span className="text-ink-900/50">{job.city ?? "—"}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-ink-900/70">
+                    {formatMoney(job.finalPrice ?? job.quotedPrice)}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${JOB_STATUS_STYLES[job.status]}`}
+                  >
+                    {JOB_STATUS_LABELS[job.status]}
                   </span>
                 </div>
               </Link>

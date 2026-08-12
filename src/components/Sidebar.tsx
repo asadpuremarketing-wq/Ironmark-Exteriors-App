@@ -8,7 +8,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", ready: true, icon: "grid" },
   { href: "/customers", label: "Customers", ready: true, icon: "users" },
   { href: "/leads", label: "Leads", ready: true, icon: "target" },
-  { href: "/jobs", label: "Jobs", ready: false, icon: "briefcase" },
+  { href: "/jobs", label: "Jobs", ready: true, icon: "briefcase" },
   { href: "/calendar", label: "Calendar", ready: false, icon: "calendar" },
   { href: "/invoices", label: "Invoices", ready: false, icon: "file" },
   { href: "/expenses", label: "Expenses", ready: false, icon: "receipt" },

@@ -9,9 +9,10 @@ type Props = {
   value: string;
   valueLabel?: string;
   onChange: (customerId: string, label: string) => void;
+  onSelectCustomer?: (customer: Customer) => void;
 };
 
-export default function CustomerPicker({ value, valueLabel, onChange }: Props) {
+export default function CustomerPicker({ value, valueLabel, onChange, onSelectCustomer }: Props) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [query, setQuery] = useState(valueLabel ?? "");
   const [open, setOpen] = useState(false);
@@ -49,6 +50,7 @@ export default function CustomerPicker({ value, valueLabel, onChange }: Props) {
     onChange(c.id, `${customerFullName(c)} — ${c.phone}`);
     setQuery(`${customerFullName(c)} — ${c.phone}`);
     setOpen(false);
+    onSelectCustomer?.(c);
   }
 
   return (

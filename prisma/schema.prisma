@@ -56,6 +56,7 @@ model Customer {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   leads Lead[]
+  jobs  Job[]
 
   @@index([phone])
   @@index([email])
@@ -92,8 +93,54 @@ model Lead {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  job Job?
+
   @@index([customerId])
   @@index([status])
   @@index([followUpDate])
   @@map("leads")
+}
+
+enum JobStatus {
+  BOOKED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+}
+
+model Job {
+  id         String   @id @default(cuid())
+  jobNumber  String   @unique @map("job_number")
+
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  // A lead can be converted into at most one job — the @unique constraint
+  // is the DB-level backstop for "no duplicate job from the same lead",
+  // enforced primarily at the application layer in /api/leads/[id]/book.
+  leadId String? @unique @map("lead_id")
+  lead   Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  service          String
+  serviceAddress   String?   @map("service_address")
+  city             String?
+  province         String    @default("Ontario")
+  postalCode       String?   @map("postal_code")
+  scheduledDate    DateTime  @map("scheduled_date")
+  startTime        String?   @map("start_time")
+  estimatedDuration String?  @map("estimated_duration")
+  quotedPrice      Decimal?  @map("quoted_price") @db.Decimal(10, 2)
+  finalPrice       Decimal?  @map("final_price") @db.Decimal(10, 2)
+  status           JobStatus @default(BOOKED)
+  notes            String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([customerId])
+  @@index([status])
+  @@index([scheduledDate])
+  @@map("jobs")
 }

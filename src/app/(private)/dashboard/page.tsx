@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { followUpDueBoundary } from "@/lib/leads";
+import { todayDateRangeUTC } from "@/lib/jobs";
+import { customerFullName } from "@/lib/customers";
 
 const placeholderStats = [
-  { label: "Today's Jobs", value: "0", icon: "briefcase" },
   { label: "Revenue", value: "$0", icon: "dollar" },
   { label: "Outstanding Invoices", value: "$0", icon: "file" },
   { label: "Expenses", value: "$0", icon: "receipt" },
@@ -17,17 +19,41 @@ const icons: Record<string, string> = {
   users: "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7-3a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM2 20c0-3.3 3.1-6 7-6s7 2.7 7 6H2zm14-4c2.8.3 5 2.1 5 4h-4",
   target: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm0 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4z",
   bell: "M12 3a5 5 0 0 0-5 5v3.6c0 .6-.2 1.1-.6 1.5L5 15h14l-1.4-1.9c-.4-.4-.6-.9-.6-1.5V8a5 5 0 0 0-5-5zM9.5 18a2.5 2.5 0 0 0 5 0",
+  check: "M5 10.5l3.5 3.5 6.5-8",
 };
+
+function formatMoney(value: unknown) {
+  if (value === null || value === undefined) return "—";
+  return Number(value).toLocaleString("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 });
+}
 
 export default async function DashboardPage() {
   const session = await auth();
   const firstName = session?.user?.name?.split(" ")[0];
+  const { start: todayStart, end: todayEnd } = todayDateRangeUTC();
 
-  const [totalCustomers, totalLeads, newLeads, followUpsDue] = await Promise.all([
+  const [
+    totalCustomers,
+    totalLeads,
+    newLeads,
+    followUpsDue,
+    todaysJobs,
+    upcomingJobs,
+    completedJobs,
+  ] = await Promise.all([
     prisma.customer.count(),
     prisma.lead.count(),
     prisma.lead.count({ where: { status: "NEW" } }),
     prisma.lead.count({ where: { followUpDate: { not: null, lte: followUpDueBoundary() } } }),
+    prisma.job.findMany({
+      where: { scheduledDate: { gte: todayStart, lte: todayEnd } },
+      include: { customer: true },
+      orderBy: { startTime: "asc" },
+    }),
+    prisma.job.count({
+      where: { scheduledDate: { gte: todayStart }, status: { notIn: ["COMPLETED", "CANCELLED"] } },
+    }),
+    prisma.job.count({ where: { status: "COMPLETED" } }),
   ]);
 
   const stats = [
@@ -35,6 +61,9 @@ export default async function DashboardPage() {
     { label: "Total Leads", value: String(totalLeads), icon: "target" },
     { label: "New Leads", value: String(newLeads), icon: "target" },
     { label: "Follow-Ups Due", value: String(followUpsDue), icon: "bell" },
+    { label: "Today's Jobs", value: String(todaysJobs.length), icon: "briefcase" },
+    { label: "Upcoming Jobs", value: String(upcomingJobs), icon: "briefcase" },
+    { label: "Completed Jobs", value: String(completedJobs), icon: "check" },
     ...placeholderStats,
   ];
 
@@ -64,6 +93,39 @@ export default async function DashboardPage() {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-8">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink-900/50">
+          Today&apos;s Jobs
+        </h2>
+        {todaysJobs.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-ink-900/15 bg-white py-10 text-center text-sm text-ink-900/40">
+            Nothing scheduled for today.
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-sm">
+            <div className="flex flex-col divide-y divide-ink-900/5">
+              {todaysJobs.map((job) => (
+                <Link
+                  key={job.id}
+                  href={`/jobs/${job.id}`}
+                  className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 text-sm transition hover:bg-brand-electric/[0.03]"
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="font-semibold text-ink-900">{job.startTime ?? "—"}</span>
+                    <span className="text-ink-900">{customerFullName(job.customer)}</span>
+                    <span className="text-ink-900/50">{job.service}</span>
+                    <span className="text-ink-900/40">{job.city ?? ""}</span>
+                  </div>
+                  <span className="font-semibold text-ink-900/70">
+                    {formatMoney(job.finalPrice ?? job.quotedPrice)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
