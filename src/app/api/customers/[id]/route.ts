@@ -71,3 +71,29 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
 
   return NextResponse.json({ customer });
 }
+
+export async function DELETE(_request: Request, { params }: { params: Params }) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  // Deleting customer records is destructive — restrict to Owner/Admin.
+  if (session.user.role !== "OWNER" && session.user.role !== "ADMIN") {
+    return NextResponse.json(
+      { error: "You do not have permission to delete customers." },
+      { status: 403 }
+    );
+  }
+
+  const { id } = await params;
+
+  const existing = await prisma.customer.findUnique({ where: { id } });
+  if (!existing) {
+    return NextResponse.json({ error: "Customer not found." }, { status: 404 });
+  }
+
+  await prisma.customer.delete({ where: { id } });
+
+  return NextResponse.json({ ok: true });
+}

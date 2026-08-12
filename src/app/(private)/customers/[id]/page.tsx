@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { customerFullName, STATUS_LABELS, STATUS_STYLES } from "@/lib/customers";
 import QuickActions from "@/components/customers/QuickActions";
+import DeleteCustomerButton from "@/components/customers/DeleteCustomerButton";
 
 type Params = Promise<{ id: string }>;
 
@@ -24,8 +26,13 @@ const placeholders = [
 
 export default async function CustomerProfilePage({ params }: { params: Params }) {
   const { id } = await params;
-  const customer = await prisma.customer.findUnique({ where: { id } });
+  const [customer, session] = await Promise.all([
+    prisma.customer.findUnique({ where: { id } }),
+    auth(),
+  ]);
   if (!customer) notFound();
+
+  const canDelete = session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -49,7 +56,7 @@ export default async function CustomerProfilePage({ params }: { params: Params }
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <QuickActions
             customerId={customer.id}
             phone={customer.phone}
@@ -62,6 +69,12 @@ export default async function CustomerProfilePage({ params }: { params: Params }
           >
             Edit Customer
           </Link>
+          {canDelete && (
+            <DeleteCustomerButton
+              customerId={customer.id}
+              customerName={customerFullName(customer)}
+            />
+          )}
         </div>
       </div>
 
