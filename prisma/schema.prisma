@@ -27,3 +27,36 @@ model User {
 
   @@map("users")
 }
+
+enum CustomerStatus {
+  LEAD
+  ACTIVE_CUSTOMER
+  PAST_CUSTOMER
+  DO_NOT_CONTACT
+}
+
+model Customer {
+  id             String         @id @default(cuid())
+  firstName      String         @map("first_name")
+  lastName       String         @map("last_name")
+  phone          String
+  email          String?
+  streetAddress  String?        @map("street_address")
+  city           String?
+  province       String         @default("Ontario")
+  postalCode     String?        @map("postal_code")
+  notes          String?
+  status         CustomerStatus @default(LEAD)
+
+  emailMarketingConsent Boolean @default(false) @map("email_marketing_consent")
+  smsMarketingConsent   Boolean @default(false) @map("sms_marketing_consent")
+  doNotContact          Boolean @default(false) @map("do_not_contact")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([phone])
+  @@index([email])
+  @@index([lastName, firstName])
+  @@map("customers")
+}

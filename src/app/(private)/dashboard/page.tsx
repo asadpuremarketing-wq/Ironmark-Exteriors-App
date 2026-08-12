@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
-const stats = [
+const placeholderStats = [
   { label: "Today's Jobs", value: "0", icon: "briefcase" },
   { label: "Revenue", value: "$0", icon: "dollar" },
   { label: "Outstanding Invoices", value: "$0", icon: "file" },
@@ -12,11 +13,18 @@ const icons: Record<string, string> = {
   dollar: "M12 3v18M17 7.5c0-1.9-2.2-3.5-5-3.5S7 5.6 7 7.5 9.2 11 12 11s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5",
   file: "M6 3h9l5 5v13H6V3zm9 0v5h5",
   receipt: "M5 3h14v18l-2-1.5L15 21l-2-1.5L11 21l-2-1.5L7 21l-2-1.5L5 21V3zm3 5h8m-8 4h8m-8 4h5",
+  users: "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7-3a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5zM2 20c0-3.3 3.1-6 7-6s7 2.7 7 6H2zm14-4c2.8.3 5 2.1 5 4h-4",
 };
 
 export default async function DashboardPage() {
   const session = await auth();
   const firstName = session?.user?.name?.split(" ")[0];
+  const totalCustomers = await prisma.customer.count();
+
+  const stats = [
+    { label: "Total Customers", value: String(totalCustomers), icon: "users" },
+    ...placeholderStats,
+  ];
 
   return (
     <div>
@@ -27,7 +35,7 @@ export default async function DashboardPage() {
         Welcome back{firstName ? `, ${firstName}` : ""}.
       </p>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-5">
         {stats.map((stat) => (
           <div
             key={stat.label}
