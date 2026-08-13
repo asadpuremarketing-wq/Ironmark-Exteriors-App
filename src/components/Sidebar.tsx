@@ -10,7 +10,7 @@ const navItems = [
   { href: "/leads", label: "Leads", ready: true, icon: "target" },
   { href: "/jobs", label: "Jobs", ready: true, icon: "briefcase" },
   { href: "/calendar", label: "Calendar", ready: false, icon: "calendar" },
-  { href: "/invoices", label: "Invoices", ready: false, icon: "file" },
+  { href: "/invoices", label: "Invoices", ready: true, icon: "file" },
   { href: "/expenses", label: "Expenses", ready: true, icon: "receipt" },
   { href: "/marketing", label: "Marketing", ready: true, icon: "megaphone" },
   { href: "/reports", label: "Reports", ready: false, icon: "chart" },

@@ -20,7 +20,7 @@ export default async function JobDetailPage({ params }: { params: Params }) {
   const { id } = await params;
   const job = await prisma.job.findUnique({
     where: { id },
-    include: { customer: true, lead: true },
+    include: { customer: true, lead: true, invoice: true },
   });
   if (!job) notFound();
 
@@ -83,6 +83,22 @@ export default async function JobDetailPage({ params }: { params: Params }) {
             className="inline-flex items-center gap-2 rounded-lg border border-ink-900/10 px-4 py-2.5 text-sm font-semibold text-ink-900 transition hover:border-brand-electric/40 hover:text-brand-electric"
           >
             View Lead
+          </Link>
+        )}
+        {job.status === "COMPLETED" && !job.invoice && (
+          <Link
+            href={`/invoices/new?jobId=${job.id}`}
+            className="inline-flex items-center gap-2 rounded-lg border border-brand-electric px-4 py-2.5 text-sm font-bold text-brand-electric transition hover:bg-brand-electric/5"
+          >
+            Create Invoice
+          </Link>
+        )}
+        {job.invoice && (
+          <Link
+            href={`/invoices/${job.invoice.id}`}
+            className="inline-flex items-center gap-2 rounded-lg border border-ink-900/10 px-4 py-2.5 text-sm font-semibold text-ink-900 transition hover:border-brand-electric/40 hover:text-brand-electric"
+          >
+            View Invoice
           </Link>
         )}
         <Link

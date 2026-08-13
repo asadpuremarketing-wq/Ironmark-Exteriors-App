@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { customerFullName, STATUS_LABELS, STATUS_STYLES } from "@/lib/customers";
 import { STATUS_LABELS as LEAD_STATUS_LABELS, STATUS_STYLES as LEAD_STATUS_STYLES } from "@/lib/leads";
 import { STATUS_LABELS as JOB_STATUS_LABELS, STATUS_STYLES as JOB_STATUS_STYLES } from "@/lib/jobs";
+import { INVOICE_STATUS_LABELS, INVOICE_STATUS_STYLES } from "@/lib/invoices";
 import QuickActions from "@/components/customers/QuickActions";
 import DeleteCustomerButton from "@/components/customers/DeleteCustomerButton";
 
@@ -18,13 +19,6 @@ function formatDate(date: Date) {
   });
 }
 
-const placeholders = [
-  { title: "Invoices", description: "Invoices will appear here once the Invoices module is built." },
-  { title: "Payments", description: "Payment history will appear here once Payments is built." },
-  { title: "Revenue", description: "Lifetime revenue from this customer will be calculated here." },
-  { title: "Service History", description: "A timeline of completed services will appear here." },
-];
-
 function formatMoney(value: unknown) {
   if (value === null || value === undefined) return "—";
   return Number(value).toLocaleString("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: 0 });
@@ -32,15 +26,34 @@ function formatMoney(value: unknown) {
 
 export default async function CustomerProfilePage({ params }: { params: Params }) {
   const { id } = await params;
-  const [customer, session, leads, jobs] = await Promise.all([
+  const [customer, session, leads, jobs, invoices] = await Promise.all([
     prisma.customer.findUnique({ where: { id } }),
     auth(),
     prisma.lead.findMany({ where: { customerId: id }, orderBy: { createdAt: "desc" } }),
     prisma.job.findMany({ where: { customerId: id }, orderBy: { scheduledDate: "desc" } }),
+    prisma.invoice.findMany({
+      where: { customerId: id, archivedAt: null },
+      include: { payments: true },
+      orderBy: { invoiceDate: "desc" },
+    }),
   ]);
   if (!customer) notFound();
 
   const canDelete = session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
+
+  const lifetimeRevenue = invoices
+    .filter((inv) => inv.status !== "CANCELLED" && inv.status !== "REFUNDED")
+    .reduce((sum, inv) => sum + Number(inv.total), 0);
+  const totalPaid = invoices.reduce(
+    (sum, inv) => sum + inv.payments.reduce((s, p) => s + Number(p.amount), 0),
+    0
+  );
+  const outstandingBalance = invoices
+    .filter((inv) => inv.status !== "CANCELLED" && inv.status !== "REFUNDED")
+    .reduce((sum, inv) => {
+      const paid = inv.payments.reduce((s, p) => s + Number(p.amount), 0);
+      return sum + Math.max(0, Number(inv.total) - paid);
+    }, 0);
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -252,17 +265,75 @@ export default async function CustomerProfilePage({ params }: { params: Params }
         )}
       </section>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {placeholders.map((p) => (
-          <div
-            key={p.title}
-            className="rounded-2xl border border-dashed border-ink-900/15 bg-white p-6"
-          >
-            <h3 className="text-sm font-bold text-ink-900">{p.title}</h3>
-            <p className="mt-1 text-xs text-ink-900/40">{p.description}</p>
-          </div>
-        ))}
+      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-wide text-ink-900/40">Lifetime Revenue</div>
+          <div className="mt-1 text-lg font-extrabold text-ink-900">{formatMoney(lifetimeRevenue)}</div>
+        </div>
+        <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-wide text-ink-900/40">Total Paid</div>
+          <div className="mt-1 text-lg font-extrabold text-ink-900">{formatMoney(totalPaid)}</div>
+        </div>
+        <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-wide text-ink-900/40">Outstanding Balance</div>
+          <div className="mt-1 text-lg font-extrabold text-ink-900">{formatMoney(outstandingBalance)}</div>
+        </div>
       </div>
+
+      <section className="mt-6 rounded-2xl border border-ink-900/10 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-ink-900/50">
+            Invoices ({invoices.length})
+          </h2>
+          <Link
+            href={`/invoices/new?customerId=${customer.id}`}
+            className="text-sm font-semibold text-brand-electric hover:underline"
+          >
+            + Add Invoice
+          </Link>
+        </div>
+
+        {invoices.length === 0 ? (
+          <p className="text-sm text-ink-900/40">No invoices yet for this customer.</p>
+        ) : (
+          <div className="flex flex-col divide-y divide-ink-900/5">
+            {invoices.map((invoice) => {
+              const paid = invoice.payments.reduce((s, p) => s + Number(p.amount), 0);
+              const remaining = Math.max(0, Number(invoice.total) - paid);
+              return (
+                <Link
+                  key={invoice.id}
+                  href={`/invoices/${invoice.id}`}
+                  className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm transition hover:bg-brand-electric/[0.03]"
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="font-mono text-xs text-ink-900/50">{invoice.invoiceNumber}</span>
+                    <span className="text-ink-900/60">
+                      {new Date(invoice.invoiceDate).toLocaleDateString("en-CA", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                    <span className="font-semibold text-ink-900">{invoice.description}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-ink-900/70">
+                      {formatMoney(invoice.total)}
+                      {remaining > 0 ? ` (${formatMoney(remaining)} due)` : ""}
+                    </span>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${INVOICE_STATUS_STYLES[invoice.status]}`}
+                    >
+                      {INVOICE_STATUS_LABELS[invoice.status]}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
