@@ -148,9 +148,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-ink-950/[0.02] p-3">
+    <div className="rounded-xl border border-ink-900/5 bg-ink-950/[0.02] p-3 transition hover:border-brand-electric/20 hover:bg-brand-electric/[0.03]">
       <div className="text-xs font-semibold uppercase tracking-wide text-ink-900/40">{label}</div>
-      <div className="mt-1 text-lg font-extrabold text-ink-900">{value}</div>
+      <div className="mt-1 text-lg font-extrabold tabular-nums tracking-tight text-ink-900">{value}</div>
     </div>
   );
 }
@@ -185,7 +185,10 @@ function ResponsiveTable({
             {rows.map((row, i) => (
               <tr key={i} className="border-b border-ink-900/5 last:border-b-0">
                 {row.map((cell, j) => (
-                  <td key={j} className={`px-3 py-2 ${j === 0 ? "font-semibold text-ink-900" : "text-ink-900/70"}`}>
+                  <td
+                    key={j}
+                    className={`px-3 py-2 tabular-nums ${j === 0 ? "font-semibold text-ink-900" : "text-ink-900/70"}`}
+                  >
                     {cell}
                   </td>
                 ))}

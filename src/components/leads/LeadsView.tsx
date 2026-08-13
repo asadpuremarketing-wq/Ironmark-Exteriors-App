@@ -68,8 +68,8 @@ export default function LeadsView({ leads }: { leads: LeadWithCustomer[] }) {
   return (
     <div>
       {followUpsDue.length > 0 && (
-        <div className="mb-6 rounded-2xl border border-orange-200 bg-orange-50 p-5">
-          <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-orange-800">
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-amber-800">
             Follow-Ups Due ({followUpsDue.length})
           </h2>
           <div className="flex flex-col gap-2">
@@ -84,7 +84,7 @@ export default function LeadsView({ leads }: { leads: LeadWithCustomer[] }) {
                   <div className="flex items-center gap-3">
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                        overdue ? "bg-red-100 text-red-700" : "bg-orange-100 text-orange-700"
+                        overdue ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
                       }`}
                     >
                       {overdue ? "Overdue" : "Due Today"}
@@ -244,7 +244,7 @@ export default function LeadsView({ leads }: { leads: LeadWithCustomer[] }) {
                           isOverdue(l.followUpDate)
                             ? "font-semibold text-red-600"
                             : isDueToday(l.followUpDate)
-                              ? "font-semibold text-orange-600"
+                              ? "font-semibold text-amber-600"
                               : "text-ink-900/60"
                         }
                       >
@@ -307,7 +307,7 @@ export default function LeadsView({ leads }: { leads: LeadWithCustomer[] }) {
                         isOverdue(l.followUpDate)
                           ? "font-semibold text-red-600"
                           : isDueToday(l.followUpDate)
-                            ? "font-semibold text-orange-600"
+                            ? "font-semibold text-amber-600"
                             : ""
                       }
                     >

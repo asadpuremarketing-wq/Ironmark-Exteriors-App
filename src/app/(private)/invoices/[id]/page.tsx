@@ -130,7 +130,7 @@ export default async function InvoiceDetailPage({ params }: { params: Params }) 
 
         <section className="rounded-2xl border border-ink-900/10 bg-white p-6 shadow-sm sm:col-span-2">
           <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-ink-900/50">Totals</h2>
-          <div className="flex flex-col gap-2 text-sm">
+          <div className="flex flex-col gap-2 text-sm tabular-nums">
             <div className="flex justify-between text-ink-900/70">
               <span>Subtotal</span>
               <span>{formatMoney(invoice.subtotal)}</span>
@@ -153,7 +153,11 @@ export default async function InvoiceDetailPage({ params }: { params: Params }) 
               <span>Paid</span>
               <span>{formatMoney(paidSum)}</span>
             </div>
-            <div className="flex justify-between font-semibold text-ink-900">
+            <div
+              className={`mt-1 flex justify-between rounded-lg px-3 py-2.5 text-base font-bold ${
+                remaining > 0 ? "bg-brand-electric/[0.06] text-brand-electric" : "bg-green-50 text-green-700"
+              }`}
+            >
               <span>Balance Due</span>
               <span>{formatMoney(remaining)}</span>
             </div>
@@ -185,7 +189,7 @@ export default async function InvoiceDetailPage({ params }: { params: Params }) 
                         <td className="py-2.5 text-ink-900/70">{formatDate(p.paymentDate)}</td>
                         <td className="py-2.5 text-ink-900/70">{PAYMENT_METHOD_LABELS[p.method]}</td>
                         <td className="py-2.5 text-ink-900/70">{p.referenceNumber ?? "—"}</td>
-                        <td className="py-2.5 text-right font-semibold text-ink-900">{formatMoney(p.amount)}</td>
+                        <td className="py-2.5 text-right font-semibold tabular-nums text-ink-900">{formatMoney(p.amount)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -197,7 +201,7 @@ export default async function InvoiceDetailPage({ params }: { params: Params }) 
                 {payments.map((p) => (
                   <div key={p.id} className="rounded-xl border border-ink-900/10 p-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-ink-900">{formatMoney(p.amount)}</span>
+                      <span className="font-semibold tabular-nums text-ink-900">{formatMoney(p.amount)}</span>
                       <span className="text-xs text-ink-900/50">{formatDate(p.paymentDate)}</span>
                     </div>
                     <div className="mt-1 flex items-center justify-between text-xs text-ink-900/50">

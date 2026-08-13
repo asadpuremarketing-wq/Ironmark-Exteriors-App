@@ -41,20 +41,26 @@ function formatDate(date: Date | string) {
 
 function StatCard({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
-    <div className="rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm">
+    <div className="group relative overflow-hidden rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-electric to-brand-electric-light opacity-0 transition group-hover:opacity-100" />
       <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-electric/10 text-brand-electric">
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
           <path d={icons[icon]} strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <div className="text-2xl font-extrabold text-ink-900">{value}</div>
+      <div className="text-2xl font-extrabold tabular-nums tracking-tight text-ink-900">{value}</div>
       <div className="mt-1 text-xs font-medium uppercase tracking-wide text-ink-900/50">{label}</div>
     </div>
   );
 }
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
-  return <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-ink-900/50">{children}</h2>;
+  return (
+    <h2 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-ink-900/50">
+      <span className="h-3.5 w-1 rounded-full bg-brand-electric/40" />
+      {children}
+    </h2>
+  );
 }
 
 type SearchParams = Promise<{ range?: string; start?: string; end?: string }>;
@@ -311,8 +317,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
                       <td className="px-4 py-3 text-ink-900/60">{formatDate(entry.date)}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                            entry.type === "payment" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset ${
+                            entry.type === "payment"
+                              ? "bg-green-50 text-green-700 ring-green-600/20"
+                              : "bg-red-50 text-red-700 ring-red-600/20"
                           }`}
                         >
                           {entry.type}
@@ -320,7 +328,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
                       </td>
                       <td className="px-4 py-3 text-ink-900">{entry.description}</td>
                       <td
-                        className={`px-4 py-3 text-right font-semibold ${entry.amount >= 0 ? "text-green-700" : "text-red-700"}`}
+                        className={`px-4 py-3 text-right font-semibold tabular-nums ${entry.amount >= 0 ? "text-green-700" : "text-red-700"}`}
                       >
                         {entry.amount >= 0 ? "+" : ""}
                         {formatMoney(entry.amount)}
@@ -385,8 +393,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
                       <td className="px-4 py-3 text-ink-900/60">{row.monthsSince} mo</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${
-                            row.status === "overdue" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide ring-1 ring-inset ${
+                            row.status === "overdue"
+                              ? "bg-red-50 text-red-700 ring-red-600/20"
+                              : "bg-amber-50 text-amber-700 ring-amber-600/20"
                           }`}
                         >
                           {row.status}
@@ -410,8 +420,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
                       <div className="text-xs text-ink-900/50">{row.service}</div>
                     </div>
                     <span
-                      className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${
-                        row.status === "overdue" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                      className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset ${
+                        row.status === "overdue"
+                          ? "bg-red-50 text-red-700 ring-red-600/20"
+                          : "bg-amber-50 text-amber-700 ring-amber-600/20"
                       }`}
                     >
                       {row.status}

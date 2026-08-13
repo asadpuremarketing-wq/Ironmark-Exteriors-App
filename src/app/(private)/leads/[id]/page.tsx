@@ -164,7 +164,7 @@ export default async function LeadDetailPage({ params }: { params: Params }) {
                   overdue
                     ? "font-semibold text-red-600"
                     : dueToday
-                      ? "font-semibold text-orange-600"
+                      ? "font-semibold text-amber-600"
                       : "text-ink-900"
                 }
               >

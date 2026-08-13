@@ -9,15 +9,24 @@ const INK = "#0B0F19";
 const styles = StyleSheet.create({
   page: {
     padding: 40,
+    paddingTop: 0,
     fontSize: 10,
     color: INK,
     fontFamily: "Helvetica",
+  },
+  topBar: {
+    height: 6,
+    backgroundColor: ELECTRIC,
+    marginBottom: 32,
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 24,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
   businessName: {
     fontSize: 16,
@@ -105,7 +114,10 @@ const styles = StyleSheet.create({
   totalsBlock: {
     marginTop: 10,
     alignSelf: "flex-end",
-    width: 220,
+    width: 240,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 4,
+    padding: 12,
   },
   totalsRow: {
     flexDirection: "row",
@@ -124,9 +136,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: "#D1D5DB",
     marginTop: 4,
     paddingTop: 6,
+    paddingBottom: 2,
   },
   grandTotalLabel: {
     fontSize: 11,
@@ -197,6 +210,7 @@ export function InvoiceDocument({
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        <View style={styles.topBar} fixed />
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.businessName}>{settings.businessName}</Text>
