@@ -284,6 +284,30 @@ export default function InvoiceForm({ mode, initialValues, lockCustomer }: Props
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-semibold uppercase tracking-wide text-ink-900/40">Quick tax:</span>
+        <button
+          type="button"
+          onClick={() => {
+            update("taxLabel", "No Tax");
+            update("taxRate", "0");
+          }}
+          className="rounded-full border border-ink-900/15 px-3.5 py-1.5 text-xs font-bold text-ink-900/70 transition hover:border-brand-electric hover:text-brand-electric"
+        >
+          No Tax / Cash
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            update("taxLabel", "13% HST");
+            update("taxRate", "13");
+          }}
+          className="rounded-full border border-ink-900/15 px-3.5 py-1.5 text-xs font-bold text-ink-900/70 transition hover:border-brand-electric hover:text-brand-electric"
+        >
+          13% HST
+        </button>
+      </div>
+
       <div className="rounded-xl border border-ink-900/10 bg-ink-950/[0.02] p-4">
         <div className="flex justify-between text-sm text-ink-900/70">
           <span>Subtotal</span>
