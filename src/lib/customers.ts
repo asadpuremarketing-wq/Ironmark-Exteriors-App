@@ -62,6 +62,12 @@ export function customerFullName(c: { firstName: string; lastName: string }) {
   return `${c.firstName} ${c.lastName}`.trim();
 }
 
+/** "Jane Doe — +1 647-951-2786", or just "Jane Doe" if no phone on file. */
+export function customerLabel(c: { firstName: string; lastName: string; phone: string | null }) {
+  const name = customerFullName(c);
+  return c.phone ? `${name} — ${c.phone}` : name;
+}
+
 export type CustomerLifetimeValue = {
   totalJobs: number;
   totalInvoiced: number;

@@ -130,6 +130,7 @@ export async function POST(request: Request) {
         postalCode: data.postalCode,
         scheduledDate: new Date(data.scheduledDate),
         startTime: data.startTime,
+        endTime: data.endTime,
         estimatedDuration: data.estimatedDuration,
         quotedPrice: data.quotedPrice ?? null,
         finalPrice: data.finalPrice ?? null,

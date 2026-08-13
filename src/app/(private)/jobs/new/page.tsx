@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { customerFullName } from "@/lib/customers";
+import { customerFullName, customerLabel } from "@/lib/customers";
 import JobForm from "@/components/jobs/JobForm";
 
 type SearchParams = Promise<{ customerId?: string; leadId?: string; date?: string }>;
@@ -46,7 +46,7 @@ export default async function NewJobPage({ searchParams }: { searchParams: Searc
               lockCustomer
               initialValues={{
                 customerId: lead.customer.id,
-                customerLabel: `${customerFullName(lead.customer)} — ${lead.customer.phone}`,
+                customerLabel: customerLabel(lead.customer),
                 leadId: lead.id,
                 service: lead.serviceRequested,
                 serviceAddress: lead.customer.streetAddress ?? "",
@@ -93,7 +93,7 @@ export default async function NewJobPage({ searchParams }: { searchParams: Searc
             preselected
               ? {
                   customerId: preselected.id,
-                  customerLabel: `${customerFullName(preselected)} — ${preselected.phone}`,
+                  customerLabel: customerLabel(preselected),
                   serviceAddress: preselected.streetAddress ?? "",
                   city: preselected.city ?? "",
                   province: preselected.province,

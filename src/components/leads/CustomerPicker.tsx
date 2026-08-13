@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { customerFullName } from "@/lib/customers";
+import { customerFullName, customerLabel } from "@/lib/customers";
 import QuickAddCustomerModal from "./QuickAddCustomerModal";
 import type { Customer } from "@prisma/client";
 
@@ -47,8 +47,8 @@ export default function CustomerPicker({ value, valueLabel, onChange, onSelectCu
   }, [customers, query]);
 
   function select(c: Customer) {
-    onChange(c.id, `${customerFullName(c)} — ${c.phone}`);
-    setQuery(`${customerFullName(c)} — ${c.phone}`);
+    onChange(c.id, customerLabel(c));
+    setQuery(customerLabel(c));
     setOpen(false);
     onSelectCustomer?.(c);
   }

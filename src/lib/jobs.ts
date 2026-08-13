@@ -32,6 +32,7 @@ export const jobInputSchema = z.object({
   postalCode: z.string().trim().optional().transform((v) => (v ? v : undefined)),
   scheduledDate: z.string().trim().min(1, "Scheduled date is required."),
   startTime: z.string().trim().optional().transform((v) => (v ? v : undefined)),
+  endTime: z.string().trim().optional().transform((v) => (v ? v : undefined)),
   estimatedDuration: z.string().trim().optional().transform((v) => (v ? v : undefined)),
   quotedPrice: z
     .union([z.number(), z.string()])

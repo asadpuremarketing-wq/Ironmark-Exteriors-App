@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { customerFullName } from "@/lib/customers";
+import { customerFullName, customerLabel } from "@/lib/customers";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
 
 type SearchParams = Promise<{ customerId?: string; jobId?: string }>;
@@ -42,7 +42,7 @@ export default async function NewInvoicePage({ searchParams }: { searchParams: S
               lockCustomer
               initialValues={{
                 customerId: job.customer.id,
-                customerLabel: `${customerFullName(job.customer)} — ${job.customer.phone}`,
+                customerLabel: customerLabel(job.customer),
                 jobId: job.id,
                 description: job.service,
                 unitPrice: job.finalPrice
@@ -85,7 +85,7 @@ export default async function NewInvoicePage({ searchParams }: { searchParams: S
             preselected
               ? {
                   customerId: preselected.id,
-                  customerLabel: `${customerFullName(preselected)} — ${preselected.phone}`,
+                  customerLabel: customerLabel(preselected),
                 }
               : undefined
           }

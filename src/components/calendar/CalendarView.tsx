@@ -24,6 +24,7 @@ type CalendarJob = {
   service: string;
   scheduledDate: string;
   startTime: string | null;
+  endTime: string | null;
   estimatedDuration: string | null;
   status: JobStatus;
   city: string | null;
@@ -491,7 +492,9 @@ function MobileAgenda({
                   >
                     <div className="min-w-0">
                       <div className="font-semibold text-ink-900">
-                        {job.startTime ? `${job.startTime} — ` : ""}
+                        {job.startTime
+                          ? `${job.startTime}${job.endTime ? `–${job.endTime}` : ""} — `
+                          : ""}
                         {job.customer.firstName} {job.customer.lastName}
                       </div>
                       <div className="truncate text-xs text-ink-900/50">{job.service}</div>

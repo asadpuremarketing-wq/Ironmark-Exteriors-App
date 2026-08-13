@@ -21,6 +21,7 @@ type JobFormValues = {
   postalCode: string;
   scheduledDate: string;
   startTime: string;
+  endTime: string;
   estimatedDuration: string;
   quotedPrice: string;
   finalPrice: string;
@@ -44,6 +45,7 @@ const emptyValues: JobFormValues = {
   postalCode: "",
   scheduledDate: "",
   startTime: "",
+  endTime: "",
   estimatedDuration: "",
   quotedPrice: "",
   finalPrice: "",
@@ -104,6 +106,7 @@ export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
       postalCode: values.postalCode,
       scheduledDate: values.scheduledDate,
       startTime: values.startTime,
+      endTime: values.endTime,
       estimatedDuration: values.estimatedDuration,
       quotedPrice: values.quotedPrice,
       finalPrice: values.finalPrice,
@@ -254,7 +257,7 @@ export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-ink-900">Scheduled Date</label>
           <input
@@ -265,6 +268,20 @@ export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
             className={inputClasses}
           />
         </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-semibold text-ink-900">
+            Est. Duration <span className="font-normal text-ink-900/40">(optional)</span>
+          </label>
+          <input
+            placeholder="e.g. 2 hours"
+            value={values.estimatedDuration}
+            onChange={(e) => update("estimatedDuration", e.target.value)}
+            className={inputClasses}
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-ink-900">
             Start Time <span className="font-normal text-ink-900/40">(optional)</span>
@@ -278,12 +295,12 @@ export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
         </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-ink-900">
-            Est. Duration <span className="font-normal text-ink-900/40">(optional)</span>
+            End Time <span className="font-normal text-ink-900/40">(optional)</span>
           </label>
           <input
-            placeholder="e.g. 2 hours"
-            value={values.estimatedDuration}
-            onChange={(e) => update("estimatedDuration", e.target.value)}
+            type="time"
+            value={values.endTime}
+            onChange={(e) => update("endTime", e.target.value)}
             className={inputClasses}
           />
         </div>

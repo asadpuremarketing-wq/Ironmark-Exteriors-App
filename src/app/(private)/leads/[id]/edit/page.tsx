@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { customerFullName } from "@/lib/customers";
+import { customerLabel } from "@/lib/customers";
 import LeadForm from "@/components/leads/LeadForm";
 
 type Params = Promise<{ id: string }>;
@@ -24,7 +24,7 @@ export default async function EditLeadPage({ params }: { params: Params }) {
           initialValues={{
             id: lead.id,
             customerId: lead.customerId,
-            customerLabel: `${customerFullName(lead.customer)} — ${lead.customer.phone}`,
+            customerLabel: customerLabel(lead.customer),
             serviceRequested: lead.serviceRequested,
             leadSource: lead.leadSource,
             estimatedValue: lead.estimatedValue ? String(lead.estimatedValue) : "",

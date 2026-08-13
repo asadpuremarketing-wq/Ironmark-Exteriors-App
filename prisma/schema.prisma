@@ -132,6 +132,7 @@ model Job {
   postalCode       String?   @map("postal_code")
   scheduledDate    DateTime  @map("scheduled_date")
   startTime        String?   @map("start_time")
+  endTime          String?   @map("end_time")
   estimatedDuration String?  @map("estimated_duration")
   actualDuration   String?   @map("actual_duration")
   travelTime       String?   @map("travel_time")

@@ -187,6 +187,7 @@ export default async function JobDetailPage({ params }: { params: Params }) {
               <dd className="text-ink-900">
                 {formatDate(job.scheduledDate)}
                 {job.startTime ? ` at ${job.startTime}` : ""}
+                {job.endTime ? ` – ${job.endTime}` : ""}
               </dd>
             </div>
             <div>

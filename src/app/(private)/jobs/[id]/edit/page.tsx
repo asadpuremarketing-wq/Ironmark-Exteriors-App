@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { customerFullName } from "@/lib/customers";
+import { customerLabel } from "@/lib/customers";
 import JobForm from "@/components/jobs/JobForm";
 
 type Params = Promise<{ id: string }>;
@@ -29,7 +29,7 @@ export default async function EditJobPage({ params }: { params: Params }) {
           initialValues={{
             id: job.id,
             customerId: job.customerId,
-            customerLabel: `${customerFullName(job.customer)} — ${job.customer.phone}`,
+            customerLabel: customerLabel(job.customer),
             leadId: job.leadId ?? undefined,
             service: job.service,
             serviceAddress: job.serviceAddress ?? "",
@@ -38,6 +38,7 @@ export default async function EditJobPage({ params }: { params: Params }) {
             postalCode: job.postalCode ?? "",
             scheduledDate: new Date(job.scheduledDate).toISOString().slice(0, 10),
             startTime: job.startTime ?? "",
+            endTime: job.endTime ?? "",
             estimatedDuration: job.estimatedDuration ?? "",
             quotedPrice: job.quotedPrice ? String(job.quotedPrice) : "",
             finalPrice: job.finalPrice ? String(job.finalPrice) : "",

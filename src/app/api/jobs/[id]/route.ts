@@ -87,6 +87,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
       postalCode: data.postalCode ?? null,
       scheduledDate: newScheduledDate,
       startTime: data.startTime ?? null,
+      endTime: data.endTime ?? null,
       estimatedDuration: data.estimatedDuration ?? null,
       quotedPrice: data.quotedPrice ?? null,
       finalPrice: data.finalPrice ?? existing.finalPrice,

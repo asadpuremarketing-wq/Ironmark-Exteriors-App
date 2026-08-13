@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { customerFullName } from "@/lib/customers";
+import { customerLabel } from "@/lib/customers";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
 
 type Params = Promise<{ id: string }>;
@@ -25,7 +25,7 @@ export default async function EditInvoicePage({ params }: { params: Params }) {
           initialValues={{
             id: invoice.id,
             customerId: invoice.customer.id,
-            customerLabel: `${customerFullName(invoice.customer)} — ${invoice.customer.phone}`,
+            customerLabel: customerLabel(invoice.customer),
             jobId: invoice.jobId ?? undefined,
             invoiceDate: new Date(invoice.invoiceDate).toISOString().slice(0, 10),
             dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().slice(0, 10) : "",
