@@ -57,12 +57,14 @@ export default async function JobDetailPage({ params }: { params: Params }) {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
-        <a
-          href={`tel:${customer.phone}`}
-          className="inline-flex items-center gap-2 rounded-lg border border-ink-900/10 px-4 py-2.5 text-sm font-semibold text-ink-900 transition hover:border-brand-electric/40 hover:text-brand-electric"
-        >
-          Call Customer
-        </a>
+        {customer.phone && (
+          <a
+            href={`tel:${customer.phone}`}
+            className="inline-flex items-center gap-2 rounded-lg border border-ink-900/10 px-4 py-2.5 text-sm font-semibold text-ink-900 transition hover:border-brand-electric/40 hover:text-brand-electric"
+          >
+            Call Customer
+          </a>
+        )}
         {customer.email && (
           <a
             href={`mailto:${customer.email}`}
@@ -132,9 +134,13 @@ export default async function JobDetailPage({ params }: { params: Params }) {
             <div>
               <dt className="text-xs text-ink-900/40">Phone</dt>
               <dd>
-                <a href={`tel:${customer.phone}`} className="text-ink-900 hover:text-brand-electric">
-                  {customer.phone}
-                </a>
+                {customer.phone ? (
+                  <a href={`tel:${customer.phone}`} className="text-ink-900 hover:text-brand-electric">
+                    {customer.phone}
+                  </a>
+                ) : (
+                  <span className="text-ink-900/40">Not provided</span>
+                )}
               </dd>
             </div>
             <div>

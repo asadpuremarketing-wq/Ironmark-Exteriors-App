@@ -103,9 +103,13 @@ export default async function CustomerProfilePage({ params }: { params: Params }
             <div>
               <dt className="text-xs text-ink-900/40">Phone</dt>
               <dd>
-                <a href={`tel:${customer.phone}`} className="text-ink-900 hover:text-brand-electric">
-                  {customer.phone}
-                </a>
+                {customer.phone ? (
+                  <a href={`tel:${customer.phone}`} className="text-ink-900 hover:text-brand-electric">
+                    {customer.phone}
+                  </a>
+                ) : (
+                  <span className="text-ink-900/40">Not provided</span>
+                )}
               </dd>
             </div>
             <div>

@@ -227,9 +227,13 @@ export default function LeadsView({ leads }: { leads: LeadWithCustomer[] }) {
                       {customerFullName(l.customer)}
                     </td>
                     <td className="px-4 py-3 text-ink-900/70">
-                      <a href={`tel:${l.customer.phone}`} onClick={(e) => e.stopPropagation()} className="hover:text-brand-electric">
-                        {l.customer.phone}
-                      </a>
+                      {l.customer.phone ? (
+                        <a href={`tel:${l.customer.phone}`} onClick={(e) => e.stopPropagation()} className="hover:text-brand-electric">
+                          {l.customer.phone}
+                        </a>
+                      ) : (
+                        <span className="text-ink-900/40">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-ink-900/70">{l.serviceRequested}</td>
                     <td className="px-4 py-3 text-ink-900/70">{l.leadSource}</td>
@@ -287,9 +291,13 @@ export default function LeadsView({ leads }: { leads: LeadWithCustomer[] }) {
                   <div className="flex gap-1.5">
                     <dt className="text-ink-900/40">Phone:</dt>
                     <dd>
-                      <a href={`tel:${l.customer.phone}`} onClick={(e) => e.stopPropagation()}>
-                        {l.customer.phone}
-                      </a>
+                      {l.customer.phone ? (
+                        <a href={`tel:${l.customer.phone}`} onClick={(e) => e.stopPropagation()}>
+                          {l.customer.phone}
+                        </a>
+                      ) : (
+                        <span className="text-ink-900/40">Not provided</span>
+                      )}
                     </dd>
                   </div>
                   <div className="flex gap-1.5">

@@ -141,9 +141,10 @@ export default function QuickAddCustomerModal({ onClose, onCreated }: Props) {
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-semibold text-ink-900">Phone</label>
+            <label className="text-sm font-semibold text-ink-900">
+              Phone <span className="font-normal text-ink-900/40">(optional)</span>
+            </label>
             <input
-              required
               type="tel"
               value={phone}
               onChange={(e) => setPhone(formatPhoneInput(e.target.value))}

@@ -215,9 +215,13 @@ export default function JobsView({ jobs }: { jobs: JobWithCustomer[] }) {
                     <td className="px-4 py-3 font-mono text-xs font-semibold text-ink-900">{j.jobNumber}</td>
                     <td className="px-4 py-3 font-semibold text-ink-900">{customerFullName(j.customer)}</td>
                     <td className="px-4 py-3 text-ink-900/70">
-                      <a href={`tel:${j.customer.phone}`} onClick={(e) => e.stopPropagation()} className="hover:text-brand-electric">
-                        {j.customer.phone}
-                      </a>
+                      {j.customer.phone ? (
+                        <a href={`tel:${j.customer.phone}`} onClick={(e) => e.stopPropagation()} className="hover:text-brand-electric">
+                          {j.customer.phone}
+                        </a>
+                      ) : (
+                        <span className="text-ink-900/40">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-ink-900/70">{j.service}</td>
                     <td className="px-4 py-3 text-ink-900/70">{j.city ?? "—"}</td>
@@ -266,9 +270,13 @@ export default function JobsView({ jobs }: { jobs: JobWithCustomer[] }) {
                   <div className="flex gap-1.5">
                     <dt className="text-ink-900/40">Phone:</dt>
                     <dd>
-                      <a href={`tel:${j.customer.phone}`} onClick={(e) => e.stopPropagation()}>
-                        {j.customer.phone}
-                      </a>
+                      {j.customer.phone ? (
+                        <a href={`tel:${j.customer.phone}`} onClick={(e) => e.stopPropagation()}>
+                          {j.customer.phone}
+                        </a>
+                      ) : (
+                        <span className="text-ink-900/40">Not provided</span>
+                      )}
                     </dd>
                   </div>
                   <div className="flex gap-1.5">

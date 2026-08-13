@@ -35,7 +35,12 @@ export const STATUS_STYLES: Record<CustomerStatus, string> = {
 export const customerInputSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required."),
   lastName: z.string().trim().min(1, "Last name is required."),
-  phone: z.string().trim().min(7, "A valid phone number is required."),
+  phone: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v ? v : undefined))
+    .refine((v) => v === undefined || v.replace(/\D/g, "").length >= 7, "Enter a valid phone number."),
   email: z
     .union([z.string().trim().email("Enter a valid email address."), z.literal("")])
     .optional()

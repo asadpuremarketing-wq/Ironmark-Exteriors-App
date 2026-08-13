@@ -14,7 +14,7 @@ type InvoiceRow = {
   description: string;
   total: number;
   status: InvoiceStatus;
-  customer: { firstName: string; lastName: string; phone: string };
+  customer: { firstName: string; lastName: string; phone: string | null };
   payments: { amount: number }[];
 };
 

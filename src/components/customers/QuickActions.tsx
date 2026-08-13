@@ -4,7 +4,7 @@ import Link from "next/link";
 
 type Props = {
   customerId: string;
-  phone: string;
+  phone: string | null;
   email: string | null;
   size?: "sm" | "md";
 };
@@ -18,11 +18,13 @@ export default function QuickActions({ customerId, phone, email, size = "sm" }: 
 
   return (
     <div className="flex items-center gap-1.5">
-      <a href={`tel:${phone}`} aria-label="Call customer" className={btn} onClick={(e) => e.stopPropagation()}>
-        <svg viewBox="0 0 20 20" className={icon} fill="currentColor">
-          <path d="M2.5 4A1.5 1.5 0 0 1 4 2.5h2.1c.4 0 .74.27.84.66l.82 3.16a.9.9 0 0 1-.25.87L6.2 8.5a11.7 11.7 0 0 0 5.3 5.3l1.3-1.3a.9.9 0 0 1 .87-.25l3.16.82c.39.1.66.44.66.84V16a1.5 1.5 0 0 1-1.5 1.5H15C7.82 17.5 2.5 12.18 2.5 5V4z" />
-        </svg>
-      </a>
+      {phone && (
+        <a href={`tel:${phone}`} aria-label="Call customer" className={btn} onClick={(e) => e.stopPropagation()}>
+          <svg viewBox="0 0 20 20" className={icon} fill="currentColor">
+            <path d="M2.5 4A1.5 1.5 0 0 1 4 2.5h2.1c.4 0 .74.27.84.66l.82 3.16a.9.9 0 0 1-.25.87L6.2 8.5a11.7 11.7 0 0 0 5.3 5.3l1.3-1.3a.9.9 0 0 1 .87-.25l3.16.82c.39.1.66.44.66.84V16a1.5 1.5 0 0 1-1.5 1.5H15C7.82 17.5 2.5 12.18 2.5 5V4z" />
+          </svg>
+        </a>
+      )}
       {email && (
         <a href={`mailto:${email}`} aria-label="Email customer" className={btn} onClick={(e) => e.stopPropagation()}>
           <svg viewBox="0 0 20 20" className={icon} fill="none" stroke="currentColor" strokeWidth="1.6">

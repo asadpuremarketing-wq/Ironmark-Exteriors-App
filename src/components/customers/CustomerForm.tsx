@@ -177,10 +177,9 @@ export default function CustomerForm({ mode, initialValues }: Props) {
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-ink-900">
-              Phone <span className="font-normal text-ink-900/40">(required)</span>
+              Phone <span className="font-normal text-ink-900/40">(optional)</span>
             </label>
             <input
-              required
               type="tel"
               value={values.phone}
               onChange={(e) => update("phone", formatPhoneInput(e.target.value))}

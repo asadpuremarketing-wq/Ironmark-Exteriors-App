@@ -328,7 +328,7 @@ export async function getLeadReport(range: DateRange): Promise<LeadReportRow[]> 
 export type DueForServiceRow = {
   customerId: string;
   customerName: string;
-  phone: string;
+  phone: string | null;
   service: string;
   lastServiceDate: Date;
   intervalMonths: number;

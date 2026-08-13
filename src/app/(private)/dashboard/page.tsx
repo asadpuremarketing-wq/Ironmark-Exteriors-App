@@ -186,12 +186,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
                     Get Directions
                   </a>
                 )}
-                <a
-                  href={`tel:${nextJob.customer.phone}`}
-                  className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-ink-900/10 bg-white px-4 text-sm font-semibold text-ink-900 transition hover:border-brand-electric/40 hover:text-brand-electric"
-                >
-                  Call
-                </a>
+                {nextJob.customer.phone && (
+                  <a
+                    href={`tel:${nextJob.customer.phone}`}
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-ink-900/10 bg-white px-4 text-sm font-semibold text-ink-900 transition hover:border-brand-electric/40 hover:text-brand-electric"
+                  >
+                    Call
+                  </a>
+                )}
                 <Link
                   href={`/jobs/${nextJob.id}`}
                   className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-ink-900/10 bg-white px-4 text-sm font-semibold text-ink-900 transition hover:border-brand-electric/40 hover:text-brand-electric"

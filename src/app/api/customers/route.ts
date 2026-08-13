@@ -58,14 +58,14 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
 
-  if (!force) {
+  const duplicateFilters = [
+    ...(data.phone ? [{ phone: data.phone }] : []),
+    ...(data.email ? [{ email: data.email }] : []),
+  ];
+
+  if (!force && duplicateFilters.length > 0) {
     const duplicates = await prisma.customer.findMany({
-      where: {
-        OR: [
-          { phone: data.phone },
-          ...(data.email ? [{ email: data.email }] : []),
-        ],
-      },
+      where: { OR: duplicateFilters },
       take: 5,
     });
 

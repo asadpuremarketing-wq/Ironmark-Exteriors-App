@@ -28,7 +28,7 @@ export default async function EditCustomerPage({ params }: { params: Params }) {
             id: customer.id,
             firstName: customer.firstName,
             lastName: customer.lastName,
-            phone: customer.phone,
+            phone: customer.phone ?? "",
             email: customer.email ?? "",
             streetAddress: customer.streetAddress ?? "",
             city: customer.city ?? "",

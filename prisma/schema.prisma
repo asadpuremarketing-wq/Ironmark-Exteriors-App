@@ -39,7 +39,7 @@ model Customer {
   id             String         @id @default(cuid())
   firstName      String         @map("first_name")
   lastName       String         @map("last_name")
-  phone          String
+  phone          String?
   email          String?
   streetAddress  String?        @map("street_address")
   city           String?

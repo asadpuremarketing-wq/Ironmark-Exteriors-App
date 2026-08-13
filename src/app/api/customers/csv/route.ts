@@ -34,7 +34,7 @@ export async function GET() {
 
     return [
       `${c.firstName} ${c.lastName}`,
-      c.phone,
+      c.phone ?? "",
       c.email ?? "",
       c.streetAddress ?? "",
       c.city ?? "",

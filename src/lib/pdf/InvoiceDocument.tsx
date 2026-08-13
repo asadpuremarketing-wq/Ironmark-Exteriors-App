@@ -243,7 +243,7 @@ export function InvoiceDocument({
                 .join(", ")}
             </Text>
           ) : null}
-          <Text style={styles.billToLine}>{invoice.customer.phone}</Text>
+          {invoice.customer.phone ? <Text style={styles.billToLine}>{invoice.customer.phone}</Text> : null}
           {invoice.customer.email ? <Text style={styles.billToLine}>{invoice.customer.email}</Text> : null}
         </View>
 

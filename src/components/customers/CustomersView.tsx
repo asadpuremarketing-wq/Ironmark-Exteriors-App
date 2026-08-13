@@ -315,13 +315,17 @@ export default function CustomersView({ customers }: { customers: EnrichedCustom
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-ink-900/80">
-                      <a
-                        href={`tel:${c.phone}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="hover:text-brand-electric"
-                      >
-                        {c.phone}
-                      </a>
+                      {c.phone ? (
+                        <a
+                          href={`tel:${c.phone}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="hover:text-brand-electric"
+                        >
+                          {c.phone}
+                        </a>
+                      ) : (
+                        <span className="text-ink-900/40">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5 text-ink-900/80">{c.city ?? "—"}</td>
                     <td className="px-5 py-3.5 text-ink-900/80">{c.jobCount}</td>
@@ -363,9 +367,13 @@ export default function CustomersView({ customers }: { customers: EnrichedCustom
                   <div className="flex gap-1.5">
                     <dt className="text-ink-900/40">Phone:</dt>
                     <dd>
-                      <a href={`tel:${c.phone}`} onClick={(e) => e.stopPropagation()}>
-                        {c.phone}
-                      </a>
+                      {c.phone ? (
+                        <a href={`tel:${c.phone}`} onClick={(e) => e.stopPropagation()}>
+                          {c.phone}
+                        </a>
+                      ) : (
+                        <span className="text-ink-900/40">Not provided</span>
+                      )}
                     </dd>
                   </div>
                   <div className="flex gap-1.5">
