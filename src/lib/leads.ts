@@ -40,14 +40,14 @@ export const STATUS_LABELS: Record<LeadStatus, string> = {
 };
 
 export const STATUS_STYLES: Record<LeadStatus, string> = {
-  NEW: "bg-brand-electric/10 text-brand-electric",
-  CONTACTED: "bg-sky-100 text-sky-700",
-  QUOTE_NEEDED: "bg-amber-100 text-amber-700",
-  QUOTE_SENT: "bg-purple-100 text-purple-700",
-  FOLLOW_UP: "bg-orange-100 text-orange-700",
-  BOOKED: "bg-green-100 text-green-700",
-  LOST: "bg-ink-900/10 text-ink-900/50",
-  NO_RESPONSE: "bg-red-100 text-red-700",
+  NEW: "bg-brand-electric/10 text-brand-electric ring-1 ring-inset ring-brand-electric/20",
+  CONTACTED: "bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20",
+  QUOTE_NEEDED: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20",
+  QUOTE_SENT: "bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20",
+  FOLLOW_UP: "bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-600/20",
+  BOOKED: "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20",
+  LOST: "bg-ink-900/5 text-ink-900/50 ring-1 ring-inset ring-ink-900/10",
+  NO_RESPONSE: "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20",
 };
 
 export const LEAD_STATUSES = Object.keys(STATUS_LABELS) as LeadStatus[];

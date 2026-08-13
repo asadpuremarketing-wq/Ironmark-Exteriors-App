@@ -43,13 +43,23 @@ export default function Sidebar() {
             key={item.href}
             href={item.href}
             onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+            aria-current={active ? "page" : undefined}
+            className={`relative flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
               active
                 ? "bg-brand-electric/15 text-white"
-                : "text-white/60 hover:bg-white/5 hover:text-white"
+                : "text-white/55 hover:bg-white/5 hover:text-white"
             }`}
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8">
+            {active && (
+              <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-electric-light" />
+            )}
+            <svg
+              viewBox="0 0 24 24"
+              className={`h-5 w-5 shrink-0 transition ${active ? "text-brand-electric-light" : "text-white/40"}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+            >
               <path d={icons[item.icon]} strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span className="flex-1">{item.label}</span>
@@ -67,14 +77,15 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="flex h-16 items-center justify-between border-b border-white/10 bg-ink-950 px-4 md:hidden">
+      <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/10 bg-ink-950 px-4 md:hidden">
         <span className="text-sm font-extrabold tracking-tight text-white">
           IRONMARK <span className="font-light text-brand-electric-light">EXTERIORS</span>
         </span>
         <button
           onClick={() => setMobileOpen((v) => !v)}
           aria-label="Toggle menu"
-          className="flex h-10 w-10 flex-col items-center justify-center gap-1.5"
+          aria-expanded={mobileOpen}
+          className="flex h-11 w-11 flex-col items-center justify-center gap-1.5 rounded-lg transition hover:bg-white/5"
         >
           <span className={`h-0.5 w-5 bg-white transition ${mobileOpen ? "translate-y-2 rotate-45" : ""}`} />
           <span className={`h-0.5 w-5 bg-white transition ${mobileOpen ? "opacity-0" : ""}`} />
@@ -82,13 +93,13 @@ export default function Sidebar() {
         </button>
       </div>
       {mobileOpen && (
-        <div className="flex flex-col border-b border-white/10 bg-ink-950 py-3 md:hidden">
+        <div className="sticky top-16 z-20 flex max-h-[calc(100vh-4rem)] flex-col overflow-y-auto border-b border-white/10 bg-ink-950 py-3 shadow-lg md:hidden">
           {NavList}
         </div>
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 flex-col border-r border-white/10 bg-ink-950 py-6 md:flex">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 bg-ink-950 py-6 md:flex">
         <div className="mb-8 px-5">
           <span className="text-lg font-extrabold tracking-tight text-white">
             IRONMARK

@@ -26,10 +26,10 @@ export const STATUS_LABELS: Record<CustomerStatus, string> = {
 };
 
 export const STATUS_STYLES: Record<CustomerStatus, string> = {
-  LEAD: "bg-brand-electric/10 text-brand-electric",
-  ACTIVE_CUSTOMER: "bg-green-100 text-green-700",
-  PAST_CUSTOMER: "bg-ink-900/10 text-ink-900/60",
-  DO_NOT_CONTACT: "bg-red-100 text-red-700",
+  LEAD: "bg-brand-electric/10 text-brand-electric ring-1 ring-inset ring-brand-electric/20",
+  ACTIVE_CUSTOMER: "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20",
+  PAST_CUSTOMER: "bg-ink-900/5 text-ink-900/60 ring-1 ring-inset ring-ink-900/10",
+  DO_NOT_CONTACT: "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20",
 };
 
 export const customerInputSchema = z.object({

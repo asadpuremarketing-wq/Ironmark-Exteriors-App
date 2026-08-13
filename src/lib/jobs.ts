@@ -12,12 +12,12 @@ export const STATUS_LABELS: Record<JobStatus, string> = {
 };
 
 export const STATUS_STYLES: Record<JobStatus, string> = {
-  BOOKED: "bg-brand-electric/10 text-brand-electric",
-  CONFIRMED: "bg-sky-100 text-sky-700",
-  IN_PROGRESS: "bg-amber-100 text-amber-700",
-  COMPLETED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-red-100 text-red-700",
-  RESCHEDULED: "bg-purple-100 text-purple-700",
+  BOOKED: "bg-brand-electric/10 text-brand-electric ring-1 ring-inset ring-brand-electric/20",
+  CONFIRMED: "bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-600/20",
+  IN_PROGRESS: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20",
+  COMPLETED: "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20",
+  CANCELLED: "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20",
+  RESCHEDULED: "bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20",
 };
 
 export const JOB_STATUSES = Object.keys(STATUS_LABELS) as JobStatus[];

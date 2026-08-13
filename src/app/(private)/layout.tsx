@@ -14,7 +14,7 @@ export default async function PrivateLayout({ children }: { children: React.Reac
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="hidden h-16 items-center justify-between border-b border-ink-900/10 bg-white px-6 md:flex">
           <div className="text-sm text-ink-900/50">
             Signed in as{" "}
@@ -22,7 +22,7 @@ export default async function PrivateLayout({ children }: { children: React.Reac
           </div>
           <LogoutButton />
         </header>
-        <main className="flex-1 bg-[#f7f7f8] p-5 md:p-8">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden bg-[#f7f7f8] p-5 md:p-8">{children}</main>
       </div>
     </div>
   );

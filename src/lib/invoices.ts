@@ -13,13 +13,13 @@ export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
 };
 
 export const INVOICE_STATUS_STYLES: Record<InvoiceStatus, string> = {
-  DRAFT: "bg-ink-900/10 text-ink-900/60",
-  PENDING: "bg-brand-electric/10 text-brand-electric",
-  PARTIALLY_PAID: "bg-amber-100 text-amber-700",
-  PAID: "bg-green-100 text-green-700",
-  OVERDUE: "bg-red-100 text-red-700",
-  CANCELLED: "bg-ink-900/10 text-ink-900/40",
-  REFUNDED: "bg-purple-100 text-purple-700",
+  DRAFT: "bg-ink-900/5 text-ink-900/60 ring-1 ring-inset ring-ink-900/10",
+  PENDING: "bg-brand-electric/10 text-brand-electric ring-1 ring-inset ring-brand-electric/20",
+  PARTIALLY_PAID: "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20",
+  PAID: "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20",
+  OVERDUE: "bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20",
+  CANCELLED: "bg-ink-900/5 text-ink-900/40 ring-1 ring-inset ring-ink-900/10",
+  REFUNDED: "bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20",
 };
 
 export const INVOICE_STATUSES = Object.keys(INVOICE_STATUS_LABELS) as InvoiceStatus[];
