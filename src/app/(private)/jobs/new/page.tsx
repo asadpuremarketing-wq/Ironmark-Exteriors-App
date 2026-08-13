@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { customerFullName } from "@/lib/customers";
 import JobForm from "@/components/jobs/JobForm";
 
-type SearchParams = Promise<{ customerId?: string; leadId?: string }>;
+type SearchParams = Promise<{ customerId?: string; leadId?: string; date?: string }>;
 
 export default async function NewJobPage({ searchParams }: { searchParams: SearchParams }) {
-  const { customerId, leadId } = await searchParams;
+  const { customerId, leadId, date } = await searchParams;
 
   // Converting a lead into a job — lock the customer and pre-fill
   // everything we already know from the lead.
@@ -54,6 +54,7 @@ export default async function NewJobPage({ searchParams }: { searchParams: Searc
                 province: lead.customer.province,
                 postalCode: lead.customer.postalCode ?? "",
                 quotedPrice: lead.estimatedValue ? String(lead.estimatedValue) : "",
+                ...(date ? { scheduledDate: date } : {}),
               }}
             />
           )}
@@ -97,8 +98,11 @@ export default async function NewJobPage({ searchParams }: { searchParams: Searc
                   city: preselected.city ?? "",
                   province: preselected.province,
                   postalCode: preselected.postalCode ?? "",
+                  ...(date ? { scheduledDate: date } : {}),
                 }
-              : undefined
+              : date
+                ? { scheduledDate: date }
+                : undefined
           }
         />
       </div>

@@ -24,6 +24,7 @@ export async function GET(request: Request) {
   const service = searchParams.get("service")?.trim();
   const city = searchParams.get("city")?.trim();
   const scheduledDate = searchParams.get("scheduledDate")?.trim();
+  const range = searchParams.get("range")?.trim();
 
   const and: Prisma.JobWhereInput[] = [];
 
@@ -52,6 +53,20 @@ export async function GET(request: Request) {
     const end = new Date(scheduledDate);
     end.setHours(23, 59, 59, 999);
     and.push({ scheduledDate: { gte: start, lte: end } });
+  }
+
+  // Additive: `?range=YYYY-MM-DD,YYYY-MM-DD` returns jobs whose scheduledDate
+  // falls within the (inclusive) window — used by the Calendar view. Existing
+  // callers that don't pass `range` are unaffected.
+  if (range) {
+    const [rangeStart, rangeEnd] = range.split(",").map((s) => s.trim());
+    if (rangeStart && rangeEnd) {
+      const start = new Date(`${rangeStart}T00:00:00.000Z`);
+      const end = new Date(`${rangeEnd}T23:59:59.999Z`);
+      if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+        and.push({ scheduledDate: { gte: start, lte: end } });
+      }
+    }
   }
 
   const jobs = await prisma.job.findMany({
