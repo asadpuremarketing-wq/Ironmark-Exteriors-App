@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import type { Customer } from "@prisma/client";
+import { formatPhoneInput } from "@/lib/phone";
 
 type DuplicateMatch = { id: string; name: string; phone: string; email: string | null };
 
@@ -124,7 +125,8 @@ export default function QuickAddCustomerModal({ onClose, onCreated }: Props) {
               required
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
+              placeholder="+1 647-951-2786"
               className={inputClasses}
             />
           </div>

@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PROVINCES, STATUS_LABELS } from "@/lib/customers";
+import { formatPhoneInput } from "@/lib/phone";
 import type { CustomerStatus } from "@prisma/client";
 
 type CustomerFormValues = {
@@ -182,8 +183,8 @@ export default function CustomerForm({ mode, initialValues }: Props) {
               required
               type="tel"
               value={values.phone}
-              onChange={(e) => update("phone", e.target.value)}
-              placeholder="(647) 555-0123"
+              onChange={(e) => update("phone", formatPhoneInput(e.target.value))}
+              placeholder="+1 647-951-2786"
               className={inputClasses}
             />
           </div>
