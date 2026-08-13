@@ -27,15 +27,21 @@ export async function POST(request: Request, { params }: { params: Params }) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const finalPriceRaw =
-    typeof body === "object" && body !== null && "finalPrice" in body
-      ? (body as { finalPrice?: unknown }).finalPrice
-      : undefined;
+  const parsedBody = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
 
-  const finalPrice = Number(finalPriceRaw);
+  const finalPrice = Number(parsedBody.finalPrice);
   if (!Number.isFinite(finalPrice) || finalPrice < 0) {
     return NextResponse.json({ error: "A valid final price is required." }, { status: 400 });
   }
+
+  const actualDuration =
+    typeof parsedBody.actualDuration === "string" && parsedBody.actualDuration.trim()
+      ? parsedBody.actualDuration.trim()
+      : undefined;
+  const travelTime =
+    typeof parsedBody.travelTime === "string" && parsedBody.travelTime.trim()
+      ? parsedBody.travelTime.trim()
+      : undefined;
 
   const existing = await prisma.job.findUnique({ where: { id } });
   if (!existing) {
@@ -44,7 +50,7 @@ export async function POST(request: Request, { params }: { params: Params }) {
 
   const job = await prisma.job.update({
     where: { id },
-    data: { status: "COMPLETED", finalPrice },
+    data: { status: "COMPLETED", finalPrice, actualDuration, travelTime },
     include: { customer: true, lead: true },
   });
 

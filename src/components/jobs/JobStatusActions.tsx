@@ -19,6 +19,8 @@ export default function JobStatusActions({
   const [showCompleteForm, setShowCompleteForm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [finalPrice, setFinalPrice] = useState(quotedPrice !== null ? String(quotedPrice) : "");
+  const [actualDuration, setActualDuration] = useState("");
+  const [travelTime, setTravelTime] = useState("");
 
   const isDone = status === "COMPLETED" || status === "CANCELLED";
 
@@ -51,7 +53,7 @@ export default function JobStatusActions({
       const res = await fetch(`/api/jobs/${jobId}/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ finalPrice }),
+        body: JSON.stringify({ finalPrice, actualDuration, travelTime }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -115,6 +117,27 @@ export default function JobStatusActions({
               className="w-full rounded-lg border border-green-300 bg-white py-2 pl-7 pr-3 text-sm outline-none"
             />
           </div>
+
+          <label className="mt-3 block text-xs font-bold text-green-900">
+            Actual Duration <span className="font-normal text-green-900/60">(optional)</span>
+          </label>
+          <input
+            value={actualDuration}
+            onChange={(e) => setActualDuration(e.target.value)}
+            placeholder="e.g. 2.5 hours"
+            className="mt-1.5 w-full rounded-lg border border-green-300 bg-white py-2 px-3 text-sm outline-none"
+          />
+
+          <label className="mt-3 block text-xs font-bold text-green-900">
+            Travel Time <span className="font-normal text-green-900/60">(optional)</span>
+          </label>
+          <input
+            value={travelTime}
+            onChange={(e) => setTravelTime(e.target.value)}
+            placeholder="e.g. 20 min"
+            className="mt-1.5 w-full rounded-lg border border-green-300 bg-white py-2 px-3 text-sm outline-none"
+          />
+
           <div className="mt-2 flex gap-2">
             <button
               type="button"

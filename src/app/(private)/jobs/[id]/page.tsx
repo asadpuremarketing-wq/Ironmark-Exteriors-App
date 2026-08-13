@@ -77,6 +77,18 @@ export default async function JobDetailPage({ params }: { params: Params }) {
         >
           View Customer
         </Link>
+        {(job.serviceAddress || job.city) && (
+          <a
+            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+              [job.serviceAddress, job.city, job.province, job.postalCode].filter(Boolean).join(", ")
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg border border-ink-900/10 px-4 py-2.5 text-sm font-semibold text-ink-900 transition hover:border-brand-electric/40 hover:text-brand-electric"
+          >
+            Get Directions
+          </a>
+        )}
         {lead && (
           <Link
             href={`/leads/${lead.id}`}
@@ -175,6 +187,18 @@ export default async function JobDetailPage({ params }: { params: Params }) {
               <dt className="text-xs text-ink-900/40">Estimated Duration</dt>
               <dd className="text-ink-900">{job.estimatedDuration ?? "Not set"}</dd>
             </div>
+            {job.status === "COMPLETED" && (
+              <>
+                <div>
+                  <dt className="text-xs text-ink-900/40">Actual Duration</dt>
+                  <dd className="text-ink-900">{job.actualDuration ?? "Not recorded"}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-ink-900/40">Travel Time</dt>
+                  <dd className="text-ink-900">{job.travelTime ?? "Not recorded"}</dd>
+                </div>
+              </>
+            )}
           </dl>
         </section>
 

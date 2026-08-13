@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
-import type { Customer } from "@prisma/client";
+import { PROVINCES } from "@/lib/customers";
+import { LEAD_SOURCES } from "@/lib/leads";
 import { formatPhoneInput } from "@/lib/phone";
+import type { Customer } from "@prisma/client";
 
 type DuplicateMatch = { id: string; name: string; phone: string; email: string | null };
 
@@ -20,6 +23,11 @@ export default function QuickAddCustomerModal({ onClose, onCreated }: Props) {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [streetAddress, setStreetAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [province, setProvince] = useState("Ontario");
+  const [postalCode, setPostalCode] = useState("");
+  const [leadSource, setLeadSource] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [duplicates, setDuplicates] = useState<DuplicateMatch[] | null>(null);
@@ -32,7 +40,18 @@ export default function QuickAddCustomerModal({ onClose, onCreated }: Props) {
       const res = await fetch("/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, phone, email, force }),
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          phone,
+          email,
+          streetAddress,
+          city,
+          province,
+          postalCode,
+          notes: leadSource ? `Source: ${leadSource}` : undefined,
+          force,
+        }),
       });
       const body = await res.json().catch(() => ({}));
 
@@ -59,8 +78,10 @@ export default function QuickAddCustomerModal({ onClose, onCreated }: Props) {
     submit(false);
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-ink-900">Quick Add Customer</h2>
@@ -142,6 +163,58 @@ export default function QuickAddCustomerModal({ onClose, onCreated }: Props) {
             />
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-ink-900">
+              Street Address <span className="font-normal text-ink-900/40">(optional)</span>
+            </label>
+            <input
+              value={streetAddress}
+              onChange={(e) => setStreetAddress(e.target.value)}
+              className={inputClasses}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-ink-900">
+                City <span className="font-normal text-ink-900/40">(optional)</span>
+              </label>
+              <input value={city} onChange={(e) => setCity(e.target.value)} className={inputClasses} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-ink-900">Province</label>
+              <select value={province} onChange={(e) => setProvince(e.target.value)} className={inputClasses}>
+                {PROVINCES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-ink-900">
+                Postal Code <span className="font-normal text-ink-900/40">(optional)</span>
+              </label>
+              <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className={inputClasses} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-ink-900">
+                How did they find us? <span className="font-normal text-ink-900/40">(optional)</span>
+              </label>
+              <select value={leadSource} onChange={(e) => setLeadSource(e.target.value)} className={inputClasses}>
+                <option value="">—</option>
+                {LEAD_SOURCES.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
           <div className="mt-2 flex gap-3">
@@ -162,6 +235,7 @@ export default function QuickAddCustomerModal({ onClose, onCreated }: Props) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -85,7 +85,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
     prisma.lead.count({ where: { followUpDate: { not: null, lte: followUpDueBoundary() } } }),
   ]);
 
-  const [todaysJobs, upcomingJobs, completedJobs] = await Promise.all([
+  const [todaysJobs, upcomingJobs, completedJobs, nextJob] = await Promise.all([
     prisma.job.findMany({
       where: { scheduledDate: { gte: todayStart, lte: todayEnd } },
       include: { customer: true },
@@ -95,6 +95,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
       where: { scheduledDate: { gte: todayStart }, status: { notIn: ["COMPLETED", "CANCELLED"] } },
     }),
     prisma.job.count({ where: { status: "COMPLETED" } }),
+    prisma.job.findFirst({
+      where: { scheduledDate: { gte: todayStart }, status: { notIn: ["COMPLETED", "CANCELLED"] } },
+      include: { customer: true },
+      orderBy: [{ scheduledDate: "asc" }, { startTime: "asc" }],
+    }),
   ]);
 
   const operations = await getOperationsStats(range);
@@ -148,6 +153,56 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
           <StatCard key={`${stat.label}-${i}`} {...stat} />
         ))}
       </div>
+
+      {nextJob && (
+        <div className="mt-8">
+          <SectionHeading>Next Job</SectionHeading>
+          <div className="rounded-2xl border border-brand-electric/30 bg-brand-electric/5 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-brand-electric">
+                  {formatDate(nextJob.scheduledDate)}
+                  {nextJob.startTime ? ` at ${nextJob.startTime}` : ""}
+                </p>
+                <p className="mt-1 text-lg font-bold text-ink-900">
+                  {customerFullName(nextJob.customer)} — {nextJob.service}
+                </p>
+                <p className="mt-0.5 text-sm text-ink-900/60">
+                  {[nextJob.serviceAddress, nextJob.city].filter(Boolean).join(", ") || "No address on file"}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(nextJob.serviceAddress || nextJob.city) && (
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                      [nextJob.serviceAddress, nextJob.city, nextJob.province, nextJob.postalCode]
+                        .filter(Boolean)
+                        .join(", ")
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-brand-electric px-4 text-sm font-bold text-white transition hover:bg-brand-electric-light"
+                  >
+                    Get Directions
+                  </a>
+                )}
+                <a
+                  href={`tel:${nextJob.customer.phone}`}
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-ink-900/10 bg-white px-4 text-sm font-semibold text-ink-900 transition hover:border-brand-electric/40 hover:text-brand-electric"
+                >
+                  Call
+                </a>
+                <Link
+                  href={`/jobs/${nextJob.id}`}
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-ink-900/10 bg-white px-4 text-sm font-semibold text-ink-900 transition hover:border-brand-electric/40 hover:text-brand-electric"
+                >
+                  View Job
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-8">
         <SectionHeading>Today&apos;s Jobs</SectionHeading>

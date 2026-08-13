@@ -133,6 +133,8 @@ model Job {
   scheduledDate    DateTime  @map("scheduled_date")
   startTime        String?   @map("start_time")
   estimatedDuration String?  @map("estimated_duration")
+  actualDuration   String?   @map("actual_duration")
+  travelTime       String?   @map("travel_time")
   quotedPrice      Decimal?  @map("quoted_price") @db.Decimal(10, 2)
   finalPrice       Decimal?  @map("final_price") @db.Decimal(10, 2)
   status           JobStatus @default(BOOKED)
