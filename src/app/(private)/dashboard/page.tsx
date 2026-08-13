@@ -148,12 +148,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
       <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">Ironmark Exteriors Dashboard</h1>
       <p className="mt-1 text-sm text-ink-900/60">Welcome back{firstName ? `, ${firstName}` : ""}.</p>
 
-      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map((stat, i) => (
-          <StatCard key={`${stat.label}-${i}`} {...stat} />
-        ))}
-      </div>
-
       {nextJob && (
         <div className="mt-8">
           <SectionHeading>Next Job</SectionHeading>
@@ -235,6 +229,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
             </div>
           </div>
         )}
+      </div>
+
+      <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {stats.map((stat, i) => (
+          <StatCard key={`${stat.label}-${i}`} {...stat} />
+        ))}
       </div>
 
       {/* Quick Actions */}
