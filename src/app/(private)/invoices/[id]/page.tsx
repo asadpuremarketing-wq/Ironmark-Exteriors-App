@@ -74,7 +74,13 @@ export default async function InvoiceDetailPage({ params }: { params: Params }) 
       </div>
 
       <div className="mt-6 print:hidden">
-        <InvoiceDetailActions invoiceId={invoice.id} remaining={remaining} canRecordPayment={canRecordPayment} />
+        <InvoiceDetailActions
+          invoiceId={invoice.id}
+          remaining={remaining}
+          canRecordPayment={canRecordPayment}
+          taxAmount={Number(invoice.taxAmount)}
+          taxLabel={invoice.taxLabel}
+        />
       </div>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">

@@ -7,10 +7,14 @@ export default function InvoiceDetailActions({
   invoiceId,
   remaining,
   canRecordPayment,
+  taxAmount,
+  taxLabel,
 }: {
   invoiceId: string;
   remaining: number;
   canRecordPayment: boolean;
+  taxAmount: number;
+  taxLabel: string;
 }) {
   const [showModal, setShowModal] = useState(false);
 
@@ -57,7 +61,13 @@ export default function InvoiceDetailActions({
                 ✕
               </button>
             </div>
-            <RecordPaymentForm invoiceId={invoiceId} remaining={remaining} onClose={() => setShowModal(false)} />
+            <RecordPaymentForm
+              invoiceId={invoiceId}
+              remaining={remaining}
+              taxAmount={taxAmount}
+              taxLabel={taxLabel}
+              onClose={() => setShowModal(false)}
+            />
           </div>
         </div>
       )}

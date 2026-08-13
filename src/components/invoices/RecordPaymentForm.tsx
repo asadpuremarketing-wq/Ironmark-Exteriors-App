@@ -8,6 +8,8 @@ import type { PaymentMethod } from "@prisma/client";
 type Props = {
   invoiceId: string;
   remaining: number;
+  taxAmount: number;
+  taxLabel: string;
   onClose: () => void;
 };
 
@@ -27,16 +29,28 @@ function formatMoney(n: number) {
   return n.toLocaleString("en-CA", { style: "currency", currency: "CAD" });
 }
 
-export default function RecordPaymentForm({ invoiceId, remaining, onClose }: Props) {
+export default function RecordPaymentForm({ invoiceId, remaining, taxAmount, taxLabel, onClose }: Props) {
   const router = useRouter();
   const [amount, setAmount] = useState(remaining > 0 ? remaining.toFixed(2) : "");
   const [method, setMethod] = useState<PaymentMethod>("CASH");
   const [paymentDate, setPaymentDate] = useState(todayKey());
   const [referenceNumber, setReferenceNumber] = useState("");
   const [notes, setNotes] = useState("");
+  const [removeTax, setRemoveTax] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [overLimitConfirm, setOverLimitConfirm] = useState(false);
+
+  const untaxedRemaining = Math.max(0, remaining - taxAmount);
+
+  function toggleRemoveTax(next: boolean) {
+    setRemoveTax(next);
+    // Only auto-adjust the amount if it still matches one of the two
+    // "full remaining balance" defaults — never clobber a manually typed amount.
+    if (amount === remaining.toFixed(2) || amount === untaxedRemaining.toFixed(2)) {
+      setAmount((next ? untaxedRemaining : remaining).toFixed(2));
+    }
+  }
 
   async function handleSubmit(e: FormEvent, overrideLimit = false) {
     e.preventDefault();
@@ -51,6 +65,14 @@ export default function RecordPaymentForm({ invoiceId, remaining, onClose }: Pro
     setError("");
 
     try {
+      if (removeTax && taxAmount > 0) {
+        const taxRes = await fetch(`/api/invoices/${invoiceId}/remove-tax`, { method: "POST" });
+        if (!taxRes.ok) {
+          const body = await taxRes.json().catch(() => ({}));
+          throw new Error(body.error || "Failed to remove tax from this invoice.");
+        }
+      }
+
       const res = await fetch(`/api/invoices/${invoiceId}/payments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -87,6 +109,22 @@ export default function RecordPaymentForm({ invoiceId, remaining, onClose }: Pro
   return (
     <form onSubmit={(e) => handleSubmit(e, false)} className="flex flex-col gap-4">
       <p className="text-sm text-ink-900/60">Remaining balance: {formatMoney(remaining)}</p>
+
+      {taxAmount > 0 && (
+        <label className="flex items-start gap-3 rounded-xl border border-ink-900/10 bg-ink-950/[0.02] p-3.5">
+          <input
+            type="checkbox"
+            checked={removeTax}
+            onChange={(e) => toggleRemoveTax(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0 accent-brand-electric"
+          />
+          <span className="text-sm text-ink-900">
+            <span className="font-semibold">No tax on this payment</span> — removes {taxLabel} (
+            {formatMoney(taxAmount)}) from the invoice, new balance {formatMoney(untaxedRemaining)}.
+            Applies regardless of payment method.
+          </span>
+        </label>
+      )}
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-ink-900">Amount</label>
