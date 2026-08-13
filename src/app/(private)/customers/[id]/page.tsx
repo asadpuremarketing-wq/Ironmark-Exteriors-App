@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { customerFullName, STATUS_LABELS, STATUS_STYLES } from "@/lib/customers";
+import { customerFullName, STATUS_LABELS, STATUS_STYLES, getCustomerLifetimeValue } from "@/lib/customers";
 import { STATUS_LABELS as LEAD_STATUS_LABELS, STATUS_STYLES as LEAD_STATUS_STYLES } from "@/lib/leads";
 import { STATUS_LABELS as JOB_STATUS_LABELS, STATUS_STYLES as JOB_STATUS_STYLES } from "@/lib/jobs";
 import { INVOICE_STATUS_LABELS, INVOICE_STATUS_STYLES } from "@/lib/invoices";
@@ -26,7 +26,7 @@ function formatMoney(value: unknown) {
 
 export default async function CustomerProfilePage({ params }: { params: Params }) {
   const { id } = await params;
-  const [customer, session, leads, jobs, invoices] = await Promise.all([
+  const [customer, session, leads, jobs, invoices, clv] = await Promise.all([
     prisma.customer.findUnique({ where: { id } }),
     auth(),
     prisma.lead.findMany({ where: { customerId: id }, orderBy: { createdAt: "desc" } }),
@@ -36,24 +36,15 @@ export default async function CustomerProfilePage({ params }: { params: Params }
       include: { payments: true },
       orderBy: { invoiceDate: "desc" },
     }),
+    getCustomerLifetimeValue(id),
   ]);
   if (!customer) notFound();
 
   const canDelete = session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
 
-  const lifetimeRevenue = invoices
-    .filter((inv) => inv.status !== "CANCELLED" && inv.status !== "REFUNDED")
-    .reduce((sum, inv) => sum + Number(inv.total), 0);
-  const totalPaid = invoices.reduce(
-    (sum, inv) => sum + inv.payments.reduce((s, p) => s + Number(p.amount), 0),
-    0
-  );
-  const outstandingBalance = invoices
-    .filter((inv) => inv.status !== "CANCELLED" && inv.status !== "REFUNDED")
-    .reduce((sum, inv) => {
-      const paid = inv.payments.reduce((s, p) => s + Number(p.amount), 0);
-      return sum + Math.max(0, Number(inv.total) - paid);
-    }, 0);
+  const lifetimeRevenue = clv.totalInvoiced;
+  const totalPaid = clv.totalPaid;
+  const outstandingBalance = clv.outstandingBalance;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -265,7 +256,7 @@ export default async function CustomerProfilePage({ params }: { params: Params }
         )}
       </section>
 
-      <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
         <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
           <div className="text-xs font-semibold uppercase tracking-wide text-ink-900/40">Lifetime Revenue</div>
           <div className="mt-1 text-lg font-extrabold text-ink-900">{formatMoney(lifetimeRevenue)}</div>
@@ -277,6 +268,16 @@ export default async function CustomerProfilePage({ params }: { params: Params }
         <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
           <div className="text-xs font-semibold uppercase tracking-wide text-ink-900/40">Outstanding Balance</div>
           <div className="mt-1 text-lg font-extrabold text-ink-900">{formatMoney(outstandingBalance)}</div>
+        </div>
+        <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-wide text-ink-900/40">Total Jobs</div>
+          <div className="mt-1 text-lg font-extrabold text-ink-900">{clv.totalJobs}</div>
+        </div>
+        <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-wide text-ink-900/40">Last Service</div>
+          <div className="mt-1 text-lg font-extrabold text-ink-900">
+            {clv.lastServiceDate ? formatDate(clv.lastServiceDate) : "—"}
+          </div>
         </div>
       </div>
 

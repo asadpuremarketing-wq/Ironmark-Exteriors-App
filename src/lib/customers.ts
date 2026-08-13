@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { CustomerStatus } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 export const PROVINCES = [
   "Ontario",
@@ -54,4 +55,51 @@ export type CustomerInput = z.infer<typeof customerInputSchema>;
 
 export function customerFullName(c: { firstName: string; lastName: string }) {
   return `${c.firstName} ${c.lastName}`.trim();
+}
+
+export type CustomerLifetimeValue = {
+  totalJobs: number;
+  totalInvoiced: number;
+  totalPaid: number;
+  outstandingBalance: number;
+  lastServiceDate: Date | null;
+};
+
+/**
+ * Single source of truth for a customer's lifetime-value figures — reused by
+ * both the customer profile page and the Past Customers list so the numbers
+ * never drift out of sync between the two views.
+ */
+export async function getCustomerLifetimeValue(customerId: string): Promise<CustomerLifetimeValue> {
+  const [jobs, invoices] = await Promise.all([
+    prisma.job.findMany({
+      where: { customerId },
+      select: { status: true, scheduledDate: true },
+    }),
+    prisma.invoice.findMany({
+      where: { customerId, archivedAt: null },
+      include: { payments: { select: { amount: true } } },
+    }),
+  ]);
+
+  const totalJobs = jobs.length;
+
+  const completedDates = jobs
+    .filter((j) => j.status === "COMPLETED")
+    .map((j) => j.scheduledDate)
+    .sort((a, b) => b.getTime() - a.getTime());
+  const lastServiceDate = completedDates[0] ?? null;
+
+  const billable = invoices.filter((inv) => inv.status !== "CANCELLED" && inv.status !== "REFUNDED");
+  const totalInvoiced = billable.reduce((sum, inv) => sum + Number(inv.total), 0);
+  const totalPaid = invoices.reduce(
+    (sum, inv) => sum + inv.payments.reduce((s, p) => s + Number(p.amount), 0),
+    0
+  );
+  const outstandingBalance = billable.reduce((sum, inv) => {
+    const paid = inv.payments.reduce((s, p) => s + Number(p.amount), 0);
+    return sum + Math.max(0, Number(inv.total) - paid);
+  }, 0);
+
+  return { totalJobs, totalInvoiced, totalPaid, outstandingBalance, lastServiceDate };
 }

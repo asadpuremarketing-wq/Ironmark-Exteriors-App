@@ -35,6 +35,29 @@ async function main() {
   });
 
   console.log(`Owner account ready: ${user.email} (role: ${user.role})`);
+
+  // Sensible default service reminder intervals for a roofing/siding/gutters
+  // contractor. Upsert-only, so re-running seed never overwrites intervals
+  // the owner has already customized in Settings.
+  const defaultIntervals: { service: string; months: number }[] = [
+    { service: "Gutter Cleaning", months: 6 },
+    { service: "Roof Inspection", months: 12 },
+    { service: "Siding Wash", months: 12 },
+    { service: "Eavestrough Cleaning", months: 6 },
+    { service: "Roof Cleaning", months: 12 },
+    { service: "Window Cleaning", months: 6 },
+    { service: "Pressure Washing", months: 12 },
+  ];
+
+  for (const interval of defaultIntervals) {
+    await prisma.serviceReminderInterval.upsert({
+      where: { service: interval.service },
+      update: {},
+      create: interval,
+    });
+  }
+
+  console.log(`Service reminder intervals ready (${defaultIntervals.length} defaults).`);
 }
 
 main()

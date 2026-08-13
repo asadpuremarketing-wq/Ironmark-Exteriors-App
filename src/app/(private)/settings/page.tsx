@@ -1,7 +1,9 @@
 import { auth } from "@/auth";
 import ChangePasswordForm from "@/components/ChangePasswordForm";
 import BusinessSettingsForm from "@/components/settings/BusinessSettingsForm";
+import ServiceIntervalsForm from "@/components/settings/ServiceIntervalsForm";
 import { getBusinessSettings, serializeBusinessSettings } from "@/lib/settings";
+import { prisma } from "@/lib/prisma";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -10,6 +12,7 @@ export default async function SettingsPage() {
 
   const businessSettingsRaw = await getBusinessSettings();
   const businessSettings = serializeBusinessSettings(businessSettingsRaw);
+  const serviceIntervals = await prisma.serviceReminderInterval.findMany({ orderBy: { service: "asc" } });
 
   return (
     <div>
@@ -58,6 +61,15 @@ export default async function SettingsPage() {
               : "Used on invoices and other business documents. Only Owner/Admin can edit these."}
           </p>
           <BusinessSettingsForm settings={businessSettings} readOnly={!canEditBusiness} />
+        </div>
+
+        <div className="rounded-2xl border border-ink-900/10 bg-white p-6 shadow-sm lg:col-span-2">
+          <h2 className="mb-1 text-base font-bold text-ink-900">Service Reminder Intervals</h2>
+          <p className="mb-5 text-sm text-ink-900/60">
+            How often (in months) each service should be repeated — drives the &quot;Customers Due for
+            Service&quot; list on the Dashboard.
+          </p>
+          <ServiceIntervalsForm intervals={serviceIntervals} readOnly={!canEditBusiness} />
         </div>
       </div>
     </div>

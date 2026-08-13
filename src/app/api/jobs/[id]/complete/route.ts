@@ -48,5 +48,15 @@ export async function POST(request: Request, { params }: { params: Params }) {
     include: { customer: true, lead: true },
   });
 
+  // A completed job is what defines a "past customer" in this app. Only
+  // DO_NOT_CONTACT is left alone (it's a stronger, deliberately-set signal
+  // that shouldn't be silently overwritten by a job completion).
+  if (job.customer.status !== "DO_NOT_CONTACT" && job.customer.status !== "PAST_CUSTOMER") {
+    await prisma.customer.update({
+      where: { id: job.customerId },
+      data: { status: "PAST_CUSTOMER" },
+    });
+  }
+
   return NextResponse.json({ job: serializeJob(job) });
 }
