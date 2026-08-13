@@ -77,7 +77,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/10 bg-ink-950 px-4 md:hidden">
+      <div className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-white/10 bg-ink-950 px-4 md:hidden">
         <span className="text-sm font-extrabold tracking-tight text-white">
           IRONMARK <span className="font-light text-brand-electric-light">EXTERIORS</span>
         </span>
@@ -93,9 +93,16 @@ export default function Sidebar() {
         </button>
       </div>
       {mobileOpen && (
-        <div className="sticky top-16 z-20 flex max-h-[calc(100vh-4rem)] flex-col overflow-y-auto border-b border-white/10 bg-ink-950 py-3 shadow-lg md:hidden">
-          {NavList}
-        </div>
+        <>
+          <div
+            onClick={() => setMobileOpen(false)}
+            aria-hidden="true"
+            className="fixed inset-x-0 top-16 bottom-0 z-20 bg-black/50 md:hidden"
+          />
+          <div className="fixed inset-x-0 top-16 z-20 flex max-h-[calc(100vh-4rem)] w-full flex-col overflow-y-auto border-b border-white/10 bg-ink-950 py-3 shadow-lg md:hidden">
+            {NavList}
+          </div>
+        </>
       )}
 
       {/* Desktop sidebar */}

@@ -22,13 +22,15 @@ export default async function CustomersPage() {
       : null;
     const services = Array.from(new Set(c.jobs.map((j) => j.service)));
     const lifetimeRevenue = c.invoices.reduce((s, i) => s + Number(i.total), 0);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- excluded to strip raw Decimal fields before passing to the client component
+    const { jobs, leads, invoices, ...customer } = c;
     return {
-      ...c,
-      jobCount: c.jobs.length,
+      ...customer,
+      jobCount: jobs.length,
       services,
       lastServiceDate,
       lifetimeRevenue,
-      leadSource: c.leads[0]?.leadSource ?? null,
+      leadSource: leads[0]?.leadSource ?? null,
     };
   });
 

@@ -149,6 +149,7 @@ export function serializeInvoice<
     taxAmount: unknown;
     total: unknown;
     payments: { amount: unknown }[];
+    job?: { quotedPrice: unknown; finalPrice: unknown } | null;
   }
 >(invoice: T) {
   return {
@@ -161,5 +162,12 @@ export function serializeInvoice<
     taxAmount: Number(invoice.taxAmount),
     total: Number(invoice.total),
     payments: invoice.payments.map((p) => ({ ...p, amount: Number(p.amount) })),
+    job: invoice.job
+      ? {
+          ...invoice.job,
+          quotedPrice: invoice.job.quotedPrice === null ? null : Number(invoice.job.quotedPrice),
+          finalPrice: invoice.job.finalPrice === null ? null : Number(invoice.job.finalPrice),
+        }
+      : invoice.job,
   };
 }

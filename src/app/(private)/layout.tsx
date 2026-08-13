@@ -12,7 +12,7 @@ export default async function PrivateLayout({ children }: { children: React.Reac
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen flex-col md:flex-row">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="hidden h-16 items-center justify-between border-b border-ink-900/10 bg-white px-6 md:flex">
