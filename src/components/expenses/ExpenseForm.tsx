@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { upload } from "@vercel/blob/client";
 import { CATEGORY_LABELS, PAYMENT_METHOD_LABELS } from "@/lib/expenses";
 import type { ExpenseCategory, PaymentMethod } from "@prisma/client";
 
@@ -52,9 +53,33 @@ export default function ExpenseForm({ mode, initialValues }: Props) {
   const [values, setValues] = useState<ExpenseFormValues>({ ...emptyValues, ...initialValues });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function update<K extends keyof ExpenseFormValues>(key: K, value: ExpenseFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
+  }
+
+  async function handleReceiptSelect(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError("");
+
+    try {
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/expenses/upload",
+      });
+      update("receiptUrl", blob.url);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Failed to upload receipt.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -213,13 +238,56 @@ export default function ExpenseForm({ mode, initialValues }: Props) {
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-semibold text-ink-900">
-          Receipt URL <span className="font-normal text-ink-900/40">(optional)</span>
+          Receipt Photo <span className="font-normal text-ink-900/40">(optional)</span>
         </label>
-        <input
-          value={values.receiptUrl}
-          onChange={(e) => update("receiptUrl", e.target.value)}
-          className={inputClasses}
-        />
+
+        {values.receiptUrl ? (
+          <div className="flex items-center gap-3 rounded-lg border border-ink-900/15 p-3">
+            {/\.(pdf)(\?|$)/i.test(values.receiptUrl) ? (
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-ink-950/5 text-xs font-bold text-ink-900/50">
+                PDF
+              </div>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element -- externally hosted Blob URL, not a local/optimizable asset
+              <img
+                src={values.receiptUrl}
+                alt="Receipt"
+                className="h-16 w-16 shrink-0 rounded-md border border-ink-900/10 object-cover"
+              />
+            )}
+            <div className="flex flex-1 flex-col gap-1">
+              <a
+                href={values.receiptUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-brand-electric hover:underline"
+              >
+                View full receipt
+              </a>
+              <button
+                type="button"
+                onClick={() => update("receiptUrl", "")}
+                className="w-fit text-xs font-semibold text-red-600 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        ) : (
+          <label className="flex min-h-[44px] w-fit cursor-pointer items-center gap-2 rounded-lg border border-dashed border-ink-900/20 px-4 py-2.5 text-sm font-semibold text-ink-900/70 transition hover:border-brand-electric hover:text-brand-electric">
+            {uploading ? "Uploading..." : "Take Photo / Upload Receipt"}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,.pdf"
+              capture="environment"
+              onChange={handleReceiptSelect}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
+        )}
+        {uploadError && <p className="text-sm font-medium text-red-600">{uploadError}</p>}
       </div>
 
       <div className="flex flex-col gap-1.5">

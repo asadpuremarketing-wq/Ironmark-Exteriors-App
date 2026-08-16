@@ -171,6 +171,16 @@ export default function ExpensesView({ expenses }: { expenses: ExpenseRow[] }) {
                     <td className="px-4 py-3 font-semibold text-ink-900">{formatMoney(e.total)}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-3">
+                        {e.receiptUrl && (
+                          <a
+                            href={e.receiptUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-semibold text-ink-900/60 hover:text-brand-electric hover:underline"
+                          >
+                            Receipt
+                          </a>
+                        )}
                         <Link href={`/expenses/${e.id}/edit`} className="text-sm font-semibold text-brand-electric hover:underline">
                           Edit
                         </Link>
@@ -214,6 +224,16 @@ export default function ExpensesView({ expenses }: { expenses: ExpenseRow[] }) {
                   )}
                 </dl>
                 <div className="mt-3 flex gap-4">
+                  {e.receiptUrl && (
+                    <a
+                      href={e.receiptUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-semibold text-ink-900/60 hover:text-brand-electric hover:underline"
+                    >
+                      Receipt
+                    </a>
+                  )}
                   <Link href={`/expenses/${e.id}/edit`} className="text-sm font-semibold text-brand-electric hover:underline">
                     Edit
                   </Link>
