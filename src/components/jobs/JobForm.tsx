@@ -54,7 +54,27 @@ const emptyValues: JobFormValues = {
 };
 
 const inputClasses =
-  "rounded-lg border border-ink-900/15 px-3.5 py-2.5 text-sm outline-none transition focus:border-brand-electric focus:ring-4 focus:ring-brand-electric/10";
+  "rounded-lg border border-ink-900/15 px-3.5 py-2.5 text-sm outline-none transition-all duration-150 focus:border-brand-electric focus:ring-4 focus:ring-brand-electric/10";
+
+function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="card-surface overflow-hidden rounded-2xl border border-ink-900/10 bg-white">
+      <div className="border-b border-ink-900/8 px-5 py-3.5">
+        <h3 className="text-sm font-bold text-ink-900">{title}</h3>
+        {description && <p className="mt-0.5 text-xs text-ink-900/45">{description}</p>}
+      </div>
+      <div className="flex flex-col gap-4 p-5">{children}</div>
+    </section>
+  );
+}
 
 export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
   const router = useRouter();
@@ -160,176 +180,165 @@ export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
         </div>
       )}
 
-      {lockCustomer ? (
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-semibold text-ink-900">Customer</span>
-          <div className="rounded-lg border border-ink-900/10 bg-ink-950/[0.02] px-3.5 py-2.5 text-sm text-ink-900/70">
-            {values.customerLabel}
+      <FormSection title="Customer">
+        {lockCustomer ? (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold text-ink-900">Customer</span>
+            <div className="rounded-lg border border-ink-900/10 bg-ink-950/[0.02] px-3.5 py-2.5 text-sm text-ink-900/70">
+              {values.customerLabel}
+            </div>
           </div>
-        </div>
-      ) : (
-        <CustomerPicker
-          value={values.customerId}
-          valueLabel={values.customerLabel}
-          onChange={(id, label) => {
-            update("customerId", id);
-            update("customerLabel", label);
-          }}
-          onSelectCustomer={handleSelectCustomer}
-        />
-      )}
+        ) : (
+          <CustomerPicker
+            value={values.customerId}
+            valueLabel={values.customerLabel}
+            onChange={(id, label) => {
+              update("customerId", id);
+              update("customerLabel", label);
+            }}
+            onSelectCustomer={handleSelectCustomer}
+          />
+        )}
+      </FormSection>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-ink-900">Service</label>
-          <select
-            value={values.service}
-            onChange={(e) => update("service", e.target.value)}
-            className={inputClasses}
-          >
-            {SERVICES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-ink-900">Status</label>
-          <select
-            value={values.status}
-            onChange={(e) => update("status", e.target.value as JobStatus)}
-            className={inputClasses}
-          >
-            {Object.entries(STATUS_LABELS)
-              .filter(([value]) => value !== "COMPLETED")
-              .map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
+      <FormSection title="Service & Status">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-ink-900">Service</label>
+            <select
+              value={values.service}
+              onChange={(e) => update("service", e.target.value)}
+              className={inputClasses}
+            >
+              {SERVICES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
                 </option>
               ))}
-          </select>
-        </div>
-      </div>
+            </select>
+          </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-ink-900">
-          Service Address <span className="font-normal text-ink-900/40">(optional)</span>
-        </label>
-        <input
-          value={values.serviceAddress}
-          onChange={(e) => update("serviceAddress", e.target.value)}
-          className={inputClasses}
-        />
-      </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-ink-900">Status</label>
+            <select
+              value={values.status}
+              onChange={(e) => update("status", e.target.value as JobStatus)}
+              className={inputClasses}
+            >
+              {Object.entries(STATUS_LABELS)
+                .filter(([value]) => value !== "COMPLETED")
+                .map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+            </select>
+          </div>
+        </div>
+      </FormSection>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-ink-900">City</label>
-          <input
-            value={values.city}
-            onChange={(e) => update("city", e.target.value)}
-            className={inputClasses}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-ink-900">Province</label>
-          <select
-            value={values.province}
-            onChange={(e) => update("province", e.target.value)}
-            className={inputClasses}
-          >
-            {PROVINCES.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-ink-900">Postal Code</label>
-          <input
-            value={values.postalCode}
-            onChange={(e) => update("postalCode", e.target.value)}
-            className={inputClasses}
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-ink-900">Scheduled Date</label>
-          <input
-            type="date"
-            required
-            value={values.scheduledDate}
-            onChange={(e) => update("scheduledDate", e.target.value)}
-            className={inputClasses}
-          />
-        </div>
+      <FormSection title="Location" description="Where the crew needs to show up.">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-ink-900">
-            Est. Duration <span className="font-normal text-ink-900/40">(optional)</span>
+            Service Address <span className="font-normal text-ink-900/40">(optional)</span>
           </label>
           <input
-            placeholder="e.g. 2 hours"
-            value={values.estimatedDuration}
-            onChange={(e) => update("estimatedDuration", e.target.value)}
+            value={values.serviceAddress}
+            onChange={(e) => update("serviceAddress", e.target.value)}
             className={inputClasses}
           />
         </div>
-      </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-ink-900">
-            Start Time <span className="font-normal text-ink-900/40">(optional)</span>
-          </label>
-          <input
-            type="time"
-            value={values.startTime}
-            onChange={(e) => update("startTime", e.target.value)}
-            className={inputClasses}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-ink-900">
-            End Time <span className="font-normal text-ink-900/40">(optional)</span>
-          </label>
-          <input
-            type="time"
-            value={values.endTime}
-            onChange={(e) => update("endTime", e.target.value)}
-            className={inputClasses}
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-semibold text-ink-900">
-            Quoted Price <span className="font-normal text-ink-900/40">(optional)</span>
-          </label>
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-ink-900/40">
-              $
-            </span>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-ink-900">City</label>
             <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={values.quotedPrice}
-              onChange={(e) => update("quotedPrice", e.target.value)}
-              className={`${inputClasses} w-full pl-7`}
+              value={values.city}
+              onChange={(e) => update("city", e.target.value)}
+              className={inputClasses}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-ink-900">Province</label>
+            <select
+              value={values.province}
+              onChange={(e) => update("province", e.target.value)}
+              className={inputClasses}
+            >
+              {PROVINCES.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-ink-900">Postal Code</label>
+            <input
+              value={values.postalCode}
+              onChange={(e) => update("postalCode", e.target.value)}
+              className={inputClasses}
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection title="Scheduling">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-ink-900">Scheduled Date</label>
+            <input
+              type="date"
+              required
+              value={values.scheduledDate}
+              onChange={(e) => update("scheduledDate", e.target.value)}
+              className={inputClasses}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-ink-900">
+              Est. Duration <span className="font-normal text-ink-900/40">(optional)</span>
+            </label>
+            <input
+              placeholder="e.g. 2 hours"
+              value={values.estimatedDuration}
+              onChange={(e) => update("estimatedDuration", e.target.value)}
+              className={inputClasses}
             />
           </div>
         </div>
 
-        {mode === "edit" && (
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-ink-900">
-              Final Price <span className="font-normal text-ink-900/40">(optional)</span>
+              Start Time <span className="font-normal text-ink-900/40">(optional)</span>
+            </label>
+            <input
+              type="time"
+              value={values.startTime}
+              onChange={(e) => update("startTime", e.target.value)}
+              className={inputClasses}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-ink-900">
+              End Time <span className="font-normal text-ink-900/40">(optional)</span>
+            </label>
+            <input
+              type="time"
+              value={values.endTime}
+              onChange={(e) => update("endTime", e.target.value)}
+              className={inputClasses}
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection title="Pricing">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-semibold text-ink-900">
+              Quoted Price <span className="font-normal text-ink-900/40">(optional)</span>
             </label>
             <div className="relative">
               <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-ink-900/40">
@@ -339,39 +348,59 @@ export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
                 type="number"
                 min="0"
                 step="0.01"
-                value={values.finalPrice}
-                onChange={(e) => update("finalPrice", e.target.value)}
+                value={values.quotedPrice}
+                onChange={(e) => update("quotedPrice", e.target.value)}
                 className={`${inputClasses} w-full pl-7`}
               />
             </div>
           </div>
-        )}
-      </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-semibold text-ink-900">Internal Notes</label>
+          {mode === "edit" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-ink-900">
+                Final Price <span className="font-normal text-ink-900/40">(optional)</span>
+              </label>
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-ink-900/40">
+                  $
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={values.finalPrice}
+                  onChange={(e) => update("finalPrice", e.target.value)}
+                  className={`${inputClasses} w-full pl-7`}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </FormSection>
+
+      <FormSection title="Internal Notes">
         <textarea
           rows={4}
           value={values.notes}
           onChange={(e) => update("notes", e.target.value)}
           className={inputClasses}
         />
-      </div>
+      </FormSection>
 
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
-      <div className="flex gap-3">
+      <div className="sticky bottom-0 -mx-5 flex gap-3 border-t border-ink-900/10 bg-[var(--surface-app)]/95 px-5 py-4 backdrop-blur-sm sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0">
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-brand-electric px-6 py-2.5 text-sm font-bold text-white transition hover:bg-brand-electric-light disabled:pointer-events-none disabled:opacity-60"
+          className="press-feedback flex min-h-[44px] items-center justify-center rounded-lg bg-brand-electric px-6 text-sm font-bold text-white shadow-electric transition hover:bg-brand-electric-light disabled:pointer-events-none disabled:opacity-60"
         >
           {submitting ? "Saving..." : mode === "create" ? "Save Job" : "Save Changes"}
         </button>
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-lg border border-ink-900/15 px-6 py-2.5 text-sm font-bold text-ink-900 transition hover:border-ink-900/30"
+          className="press-feedback flex min-h-[44px] items-center justify-center rounded-lg border border-ink-900/15 bg-white px-6 text-sm font-bold text-ink-900 transition hover:border-ink-900/30"
         >
           Cancel
         </button>
