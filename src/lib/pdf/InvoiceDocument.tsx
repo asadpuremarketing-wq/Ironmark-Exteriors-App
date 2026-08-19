@@ -4,62 +4,92 @@ import { PAYMENT_METHOD_LABELS } from "@/lib/expenses";
 import type { Invoice, Payment, Customer, BusinessSettings } from "@prisma/client";
 
 const ELECTRIC = "#2563EB";
+const ELECTRIC_DARK = "#1D4ED8";
 const INK = "#0B0F19";
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
     paddingTop: 0,
+    paddingBottom: 56,
+    paddingHorizontal: 40,
     fontSize: 10,
     color: INK,
     fontFamily: "Helvetica",
   },
   topBar: {
-    height: 6,
+    height: 8,
     backgroundColor: ELECTRIC,
-    marginBottom: 32,
+    marginBottom: 36,
   },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 24,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    marginBottom: 26,
+    paddingBottom: 22,
+    borderBottomWidth: 1.5,
+    borderBottomColor: INK,
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  brandMark: {
+    width: 30,
+    height: 30,
+    borderRadius: 7,
+    backgroundColor: ELECTRIC,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  brandMarkText: {
+    fontSize: 13,
+    fontWeight: 700,
+    color: "#FFFFFF",
   },
   businessName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 700,
     color: INK,
+    letterSpacing: 0.2,
   },
   businessSub: {
-    fontSize: 9,
+    fontSize: 8.5,
     color: "#6B7280",
     marginTop: 2,
   },
   invoiceTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 700,
-    color: ELECTRIC,
+    color: INK,
     textAlign: "right",
+    letterSpacing: 1,
   },
   invoiceMeta: {
     fontSize: 9,
     color: "#6B7280",
     textAlign: "right",
-    marginTop: 2,
+    marginTop: 3,
   },
-  statusBadge: {
-    marginTop: 6,
-    alignSelf: "flex-end",
+  invoiceMetaStrong: {
     fontSize: 9,
     fontWeight: 700,
+    color: INK,
+    textAlign: "right",
+    marginTop: 3,
+  },
+  statusBadge: {
+    marginTop: 8,
+    alignSelf: "flex-end",
+    fontSize: 8.5,
+    fontWeight: 700,
     color: "#FFFFFF",
-    backgroundColor: ELECTRIC,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: 4,
+    backgroundColor: ELECTRIC_DARK,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 3,
+    letterSpacing: 0.4,
   },
   section: {
     marginBottom: 18,
@@ -114,10 +144,14 @@ const styles = StyleSheet.create({
   totalsBlock: {
     marginTop: 10,
     alignSelf: "flex-end",
-    width: 240,
+    width: 250,
     backgroundColor: "#F9FAFB",
-    borderRadius: 4,
-    padding: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderTopWidth: 3,
+    borderTopColor: ELECTRIC,
+    padding: 14,
   },
   totalsRow: {
     flexDirection: "row",
@@ -165,13 +199,30 @@ const styles = StyleSheet.create({
     borderTopColor: "#E5E7EB",
   },
   footer: {
-    marginTop: 30,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    position: "absolute",
+    left: 40,
+    right: 40,
+    bottom: 28,
+  },
+  footerDivider: {
+    height: 2,
+    backgroundColor: ELECTRIC,
+    marginBottom: 10,
+    borderRadius: 1,
+  },
+  footerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  footerMessage: {
     fontSize: 9,
-    color: "#6B7280",
-    textAlign: "center",
+    color: "#374151",
+    fontWeight: 700,
+  },
+  footerMeta: {
+    fontSize: 8,
+    color: "#9CA3AF",
   },
 });
 
@@ -212,16 +263,21 @@ export function InvoiceDocument({
       <Page size="A4" style={styles.page}>
         <View style={styles.topBar} fixed />
         <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.businessName}>{settings.businessName}</Text>
-            {businessAddressLine ? <Text style={styles.businessSub}>{businessAddressLine}</Text> : null}
-            {settings.phone ? <Text style={styles.businessSub}>{settings.phone}</Text> : null}
-            {settings.email ? <Text style={styles.businessSub}>{settings.email}</Text> : null}
-            {settings.website ? <Text style={styles.businessSub}>{settings.website}</Text> : null}
+          <View style={styles.brandRow}>
+            <View style={styles.brandMark}>
+              <Text style={styles.brandMarkText}>{settings.businessName?.trim().charAt(0).toUpperCase() || "I"}</Text>
+            </View>
+            <View>
+              <Text style={styles.businessName}>{settings.businessName}</Text>
+              {businessAddressLine ? <Text style={styles.businessSub}>{businessAddressLine}</Text> : null}
+              {settings.phone ? <Text style={styles.businessSub}>{settings.phone}</Text> : null}
+              {settings.email ? <Text style={styles.businessSub}>{settings.email}</Text> : null}
+              {settings.website ? <Text style={styles.businessSub}>{settings.website}</Text> : null}
+            </View>
           </View>
           <View>
             <Text style={styles.invoiceTitle}>INVOICE</Text>
-            <Text style={styles.invoiceMeta}>{invoice.invoiceNumber}</Text>
+            <Text style={styles.invoiceMetaStrong}>{invoice.invoiceNumber}</Text>
             <Text style={styles.invoiceMeta}>Date: {formatDate(invoice.invoiceDate)}</Text>
             {invoice.dueDate ? <Text style={styles.invoiceMeta}>Due: {formatDate(invoice.dueDate)}</Text> : null}
             <Text style={styles.statusBadge}>{INVOICE_STATUS_LABELS[invoice.status]}</Text>
@@ -318,8 +374,16 @@ export function InvoiceDocument({
           </View>
         ) : null}
 
-        <View style={styles.footer}>
-          <Text>{settings.invoiceFooterMessage || "Thank you for your business."}</Text>
+        <View style={styles.footer} fixed>
+          <View style={styles.footerDivider} />
+          <View style={styles.footerRow}>
+            <Text style={styles.footerMessage}>
+              {settings.invoiceFooterMessage || "Thank you for your business."}
+            </Text>
+            <Text style={styles.footerMeta}>
+              {settings.businessName} · {invoice.invoiceNumber}
+            </Text>
+          </View>
         </View>
       </Page>
     </Document>
