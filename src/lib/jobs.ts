@@ -112,3 +112,22 @@ export function todayDateRangeUTC() {
     end: new Date(`${todayKey}T23:59:59.999Z`),
   };
 }
+
+/**
+ * Formats a 24-hour "HH:MM" time string (as stored from <input type="time">)
+ * as 12-hour with AM/PM, e.g. "14:30" -> "2:30 PM". Anything that isn't a
+ * clean HH:MM string is returned unchanged rather than throwing.
+ */
+export function formatTime(time: string | null | undefined): string | null {
+  if (!time) return null;
+  const match = /^(\d{1,2}):(\d{2})/.exec(time);
+  if (!match) return time;
+
+  const hour24 = Number(match[1]);
+  const minute = match[2];
+  if (!Number.isFinite(hour24) || hour24 < 0 || hour24 > 23) return time;
+
+  const period = hour24 < 12 ? "AM" : "PM";
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  return `${hour12}:${minute} ${period}`;
+}

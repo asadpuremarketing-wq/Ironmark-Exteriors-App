@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { customerFullName } from "@/lib/customers";
 import { SERVICES } from "@/lib/leads";
-import { STATUS_LABELS, isToday, isUpcoming } from "@/lib/jobs";
+import { STATUS_LABELS, isToday, isUpcoming, formatTime } from "@/lib/jobs";
 import QuickJobStatusSelect from "./QuickJobStatusSelect";
 import type { Customer, Job } from "@prisma/client";
 
@@ -226,7 +226,7 @@ export default function JobsView({ jobs }: { jobs: JobWithCustomer[] }) {
                     <td className="px-4 py-3 text-ink-900/70">{j.service}</td>
                     <td className="px-4 py-3 text-ink-900/70">{j.city ?? "—"}</td>
                     <td className="px-4 py-3 text-ink-900/60">{formatDate(j.scheduledDate)}</td>
-                    <td className="px-4 py-3 text-ink-900/60">{j.startTime ?? "—"}</td>
+                    <td className="px-4 py-3 text-ink-900/60">{formatTime(j.startTime) ?? "—"}</td>
                     <td className="px-4 py-3 text-ink-900/70">
                       {formatMoney(j.finalPrice ?? j.quotedPrice)}
                     </td>
@@ -283,7 +283,7 @@ export default function JobsView({ jobs }: { jobs: JobWithCustomer[] }) {
                     <dt className="text-ink-900/40">Date:</dt>
                     <dd>
                       {formatDate(j.scheduledDate)}
-                      {j.startTime ? ` at ${j.startTime}` : ""}
+                      {j.startTime ? ` at ${formatTime(j.startTime)}` : ""}
                     </dd>
                   </div>
                   <div className="flex gap-1.5">

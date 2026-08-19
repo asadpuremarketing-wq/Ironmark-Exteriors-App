@@ -2,7 +2,7 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { followUpDueBoundary } from "@/lib/leads";
-import { todayDateRangeUTC } from "@/lib/jobs";
+import { todayDateRangeUTC, formatTime } from "@/lib/jobs";
 import { customerFullName } from "@/lib/customers";
 import {
   resolveDateRange,
@@ -134,15 +134,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
     { label: "Completed Jobs", value: String(completedJobs), icon: "check" },
   ];
 
-  const quickActions = [
-    { label: "Add Customer", href: "/customers/new" },
-    { label: "Add Lead", href: "/leads/new" },
-    { label: "Book Job", href: "/jobs/new" },
-    { label: "Create Invoice", href: "/invoices/new" },
-    { label: "Record Payment", href: "/invoices" },
-    { label: "Add Expense", href: "/expenses/new" },
-  ];
-
   return (
     <div>
       <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">Ironmark Exteriors Dashboard</h1>
@@ -156,7 +147,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-brand-electric">
                   {formatDate(nextJob.scheduledDate)}
-                  {nextJob.startTime ? ` at ${nextJob.startTime}` : ""}
+                  {nextJob.startTime ? ` at ${formatTime(nextJob.startTime)}` : ""}
                 </p>
                 <p className="mt-1 text-lg font-bold text-ink-900">
                   {customerFullName(nextJob.customer)} — {nextJob.service}
@@ -216,7 +207,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
                   className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 text-sm transition hover:bg-brand-electric/[0.03]"
                 >
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className="font-semibold text-ink-900">{job.startTime ?? "—"}</span>
+                    <span className="font-semibold text-ink-900">{formatTime(job.startTime) ?? "—"}</span>
                     <span className="text-ink-900">{customerFullName(job.customer)}</span>
                     <span className="text-ink-900/50">{job.service}</span>
                     <span className="text-ink-900/40">{job.city ?? ""}</span>
@@ -237,22 +228,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="mt-8">
-        <SectionHeading>Quick Actions</SectionHeading>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {quickActions.map((qa) => (
-            <Link
-              key={qa.label}
-              href={qa.href}
-              className="flex min-h-[64px] items-center justify-center rounded-xl border border-ink-900/10 bg-white px-3 py-3 text-center text-sm font-bold text-ink-900 shadow-sm transition hover:border-brand-electric hover:text-brand-electric"
-            >
-              {qa.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
       {/* Financial section with date range */}
       <div className="mt-10 flex flex-col gap-3">
         <h2 className="text-lg font-extrabold text-ink-900">Financial Overview</h2>
@@ -260,50 +235,25 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
       </div>
 
       <div className="mt-4">
-        <SectionHeading>Operations ({range.label})</SectionHeading>
+        <SectionHeading>Operations &amp; Sales ({range.label})</SectionHeading>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard label="Jobs Scheduled" value={String(operations.jobsScheduled)} icon="briefcase" />
           <StatCard label="Jobs Completed" value={String(operations.jobsCompleted)} icon="check" />
-          <StatCard label="Jobs Booked" value={String(operations.jobsBooked)} icon="briefcase" />
-          <StatCard label="Jobs Cancelled" value={String(operations.jobsCancelled)} icon="briefcase" />
-        </div>
-      </div>
-
-      <div className="mt-6">
-        <SectionHeading>Sales ({range.label})</SectionHeading>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
           <StatCard label="New Leads" value={String(sales.newLeads)} icon="target" />
-          <StatCard label="Jobs Booked" value={String(sales.jobsBooked)} icon="check" />
           <StatCard label="Conversion Rate" value={`${sales.conversionRate.toFixed(1)}%`} icon="chart" />
         </div>
       </div>
 
       <div className="mt-6">
-        <SectionHeading>Revenue ({range.label})</SectionHeading>
+        <SectionHeading>Money ({range.label})</SectionHeading>
         <p className="mb-3 text-xs text-ink-900/40">
-          Collected = cash actually received. Invoiced = total billed. These are never the same number.
+          Collected = cash actually received. Invoiced = total billed. Profit = collected − expenses.
         </p>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard label="Collected Revenue" value={formatMoney(revenue.collectedRevenue)} icon="dollar" />
           <StatCard label="Invoiced Revenue" value={formatMoney(revenue.invoicedRevenue)} icon="file" />
-          <StatCard label="Payments" value={String(revenue.paymentCount)} icon="dollar" />
-          <StatCard label="Invoices" value={String(revenue.invoiceCount)} icon="file" />
-        </div>
-      </div>
-
-      <div className="mt-6">
-        <SectionHeading>Expenses ({range.label})</SectionHeading>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard label="Total Expenses" value={formatMoney(expenses.totalExpenses)} icon="receipt" />
-          <StatCard label="Expense Count" value={String(expenses.count)} icon="receipt" />
-        </div>
-      </div>
-
-      <div className="mt-6">
-        <SectionHeading>Profit ({range.label})</SectionHeading>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-2">
-          <StatCard label="Collected − Expenses" value={formatMoney(profit.collectedProfit)} icon="dollar" />
-          <StatCard label="Invoiced − Expenses" value={formatMoney(profit.invoicedProfit)} icon="dollar" />
+          <StatCard label="Profit" value={formatMoney(profit.collectedProfit)} icon="dollar" />
         </div>
       </div>
 

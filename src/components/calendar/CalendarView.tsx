@@ -15,7 +15,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { STATUS_LABELS, STATUS_STYLES } from "@/lib/jobs";
+import { STATUS_LABELS, STATUS_STYLES, formatTime } from "@/lib/jobs";
 import type { JobStatus } from "@prisma/client";
 
 type CalendarJob = {
@@ -305,9 +305,9 @@ function JobChip({ job, draggable, onDragStart }: { job: CalendarJob; draggable?
         onDragStart?.();
       }}
       className={`truncate rounded-md px-1.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[job.status]} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
-      title={`${job.startTime ?? ""} ${job.customer.firstName} ${job.customer.lastName} — ${job.service}`}
+      title={`${formatTime(job.startTime) ?? ""} ${job.customer.firstName} ${job.customer.lastName} — ${job.service}`}
     >
-      {job.startTime ? `${job.startTime} ` : ""}
+      {job.startTime ? `${formatTime(job.startTime)} ` : ""}
       {job.customer.firstName} {job.customer.lastName}
     </div>
   );
@@ -416,7 +416,7 @@ function DayAgenda({ day, jobs, onJobClick }: { day: Date; jobs: CalendarJob[]; 
               className="flex w-full flex-wrap items-center justify-between gap-2 px-5 py-3.5 text-left text-sm transition hover:bg-brand-electric/[0.03]"
             >
               <div className="flex flex-wrap items-center gap-3">
-                <span className="font-semibold text-ink-900">{job.startTime ?? "—"}</span>
+                <span className="font-semibold text-ink-900">{formatTime(job.startTime) ?? "—"}</span>
                 <span className="text-ink-900">
                   {job.customer.firstName} {job.customer.lastName}
                 </span>
@@ -493,7 +493,7 @@ function MobileAgenda({
                     <div className="min-w-0">
                       <div className="font-semibold text-ink-900">
                         {job.startTime
-                          ? `${job.startTime}${job.endTime ? `–${job.endTime}` : ""} — `
+                          ? `${formatTime(job.startTime)}${job.endTime ? `–${formatTime(job.endTime)}` : ""} — `
                           : ""}
                         {job.customer.firstName} {job.customer.lastName}
                       </div>

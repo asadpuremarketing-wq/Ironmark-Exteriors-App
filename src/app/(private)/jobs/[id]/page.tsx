@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { customerFullName } from "@/lib/customers";
-import { STATUS_LABELS, STATUS_STYLES } from "@/lib/jobs";
+import { STATUS_LABELS, STATUS_STYLES, formatTime } from "@/lib/jobs";
 import JobStatusActions from "@/components/jobs/JobStatusActions";
 
 type Params = Promise<{ id: string }>;
@@ -49,7 +49,7 @@ export default async function JobDetailPage({ params }: { params: Params }) {
           </p>
           <p className="mt-0.5 text-sm text-ink-900/50">
             Scheduled {formatDate(job.scheduledDate)}
-            {job.startTime ? ` at ${job.startTime}` : ""}
+            {job.startTime ? ` at ${formatTime(job.startTime)}` : ""}
           </p>
         </div>
 
@@ -186,8 +186,8 @@ export default async function JobDetailPage({ params }: { params: Params }) {
               <dt className="text-xs text-ink-900/40">Date &amp; Time</dt>
               <dd className="text-ink-900">
                 {formatDate(job.scheduledDate)}
-                {job.startTime ? ` at ${job.startTime}` : ""}
-                {job.endTime ? ` – ${job.endTime}` : ""}
+                {job.startTime ? ` at ${formatTime(job.startTime)}` : ""}
+                {job.endTime ? ` – ${formatTime(job.endTime)}` : ""}
               </dd>
             </div>
             <div>
