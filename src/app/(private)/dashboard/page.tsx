@@ -41,15 +41,15 @@ function formatDate(date: Date | string) {
 
 function StatCard({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <div className="card-surface card-surface-interactive group relative overflow-hidden rounded-2xl border border-ink-900/10 bg-white p-5">
       <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-electric to-brand-electric-light opacity-0 transition group-hover:opacity-100" />
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-electric/10 text-brand-electric">
+      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-electric/10 text-brand-electric transition-colors group-hover:bg-brand-electric group-hover:text-white">
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
           <path d={icons[icon]} strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <div className="text-2xl font-extrabold tabular-nums tracking-tight text-ink-900">{value}</div>
-      <div className="mt-1 text-xs font-medium uppercase tracking-wide text-ink-900/50">{label}</div>
+      <div className="text-[1.7rem] font-extrabold leading-none tabular-nums tracking-tight text-ink-900">{value}</div>
+      <div className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-ink-900/45">{label}</div>
     </div>
   );
 }
@@ -136,13 +136,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
 
   return (
     <div>
-      <h1 className="text-2xl font-extrabold tracking-tight text-ink-900">Ironmark Exteriors Dashboard</h1>
-      <p className="mt-1 text-sm text-ink-900/60">Welcome back{firstName ? `, ${firstName}` : ""}.</p>
+      <h1 className="text-[1.7rem] font-extrabold tracking-tight text-ink-900 sm:text-3xl">Ironmark Exteriors Dashboard</h1>
+      <p className="mt-1.5 text-sm text-ink-900/55">Welcome back{firstName ? `, ${firstName}` : ""}.</p>
 
       {nextJob && (
         <div className="mt-8">
           <SectionHeading>Next Job</SectionHeading>
-          <div className="rounded-2xl border border-brand-electric/30 bg-brand-electric/5 p-5">
+          <div className="shadow-raised relative overflow-hidden rounded-2xl border border-brand-electric/30 bg-gradient-to-br from-brand-electric/[0.07] to-brand-electric/[0.02] p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-brand-electric">
@@ -198,7 +198,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
             Nothing scheduled for today.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border card-surface border-ink-900/10 bg-white">
             <div className="flex flex-col divide-y divide-ink-900/5">
               {todaysJobs.map((job) => (
                 <Link
@@ -261,7 +261,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
       <div className="mt-10">
         <SectionHeading>Daily Financial View (Today)</SectionHeading>
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border card-surface border-ink-900/10 bg-white">
             <div className="border-b border-ink-900/10 bg-ink-950/[0.02] px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-ink-900/50">
               Today&apos;s Payments
             </div>
@@ -278,7 +278,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
               </div>
             )}
           </div>
-          <div className="overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border card-surface border-ink-900/10 bg-white">
             <div className="border-b border-ink-900/10 bg-ink-950/[0.02] px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-ink-900/50">
               Today&apos;s Expenses
             </div>
@@ -308,7 +308,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
         ) : (
           <>
             {/* Desktop table */}
-            <div className="hidden overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-sm md:block">
+            <div className="hidden overflow-hidden rounded-2xl border card-surface border-ink-900/10 bg-white md:block">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-ink-900/10 bg-ink-950/[0.02] text-left text-xs font-bold uppercase tracking-wide text-ink-900/50">
@@ -376,7 +376,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
           </div>
         ) : (
           <>
-            <div className="hidden overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-sm md:block">
+            <div className="hidden overflow-hidden rounded-2xl border card-surface border-ink-900/10 bg-white md:block">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-ink-900/10 bg-ink-950/[0.02] text-left text-xs font-bold uppercase tracking-wide text-ink-900/50">

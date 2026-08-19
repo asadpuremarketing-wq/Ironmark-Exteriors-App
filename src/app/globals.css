@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #0a0a0a;
+  --surface-app: #f5f6f8;
 
   --color-ink-950: #050505;
   --color-ink-900: #0a0a0a;
@@ -13,6 +14,20 @@
   --color-electric-500: #2f7fd6;
   --color-electric-400: #4a9be8;
   --color-electric-300: #7fbcf2;
+
+  /* Layered shadow system: a tight contact shadow plus a soft ambient
+     shadow, tinted very slightly with ink so cards read as sitting above
+     the app background rather than floating on pure grey. */
+  --shadow-card:
+    0 1px 2px -1px rgba(10, 10, 20, 0.06),
+    0 1px 1px rgba(10, 10, 20, 0.04);
+  --shadow-card-hover:
+    0 10px 24px -12px rgba(10, 10, 20, 0.18),
+    0 2px 6px -2px rgba(10, 10, 20, 0.08);
+  --shadow-raised:
+    0 4px 16px -6px rgba(10, 10, 20, 0.14),
+    0 1px 3px rgba(10, 10, 20, 0.08);
+  --shadow-electric: 0 8px 24px -8px rgba(47, 127, 214, 0.35);
 }
 
 @theme inline {
@@ -40,6 +55,35 @@ body {
 
 * {
   scrollbar-color: rgba(10, 10, 10, 0.2) transparent;
+}
+
+/* Shared depth utilities — reused across cards, panels, and forms instead
+   of ad-hoc shadow-sm/shadow-md so the whole app shares one shadow scale. */
+.card-surface {
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.card-surface-interactive:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-1px);
+}
+
+.shadow-raised {
+  box-shadow: var(--shadow-raised);
+}
+
+.shadow-electric {
+  box-shadow: var(--shadow-electric);
+}
+
+/* Subtle press feedback for buttons/links so taps feel responsive on
+   mobile, not just on hover which touch devices never trigger. */
+.press-feedback {
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+.press-feedback:active {
+  transform: scale(0.97);
 }
 
 /* Subtle fade-in for route content so page changes feel intentional rather than an abrupt swap. */
