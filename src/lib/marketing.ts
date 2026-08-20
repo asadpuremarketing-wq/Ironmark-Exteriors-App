@@ -264,6 +264,7 @@ export function summarizeAdSpend(rows: LeadSourcePerformance[]): AdSpendSummary 
 export type OverallAdCostPerJob = {
   totalAdSpend: number;
   totalJobsBooked: number;
+  totalRevenue: number;
   costPerJob: number | null;
 };
 
@@ -297,7 +298,7 @@ export async function getOverallAdCostPerJob(dateRange?: {
     "YARD_SIGNS",
   ];
 
-  const [marketingSpendSum, expenseSpendSum, totalJobsBooked] = await Promise.all([
+  const [marketingSpendSum, expenseSpendSum, jobs] = await Promise.all([
     prisma.marketingSpend.aggregate({
       _sum: { amount: true },
       where: dateRange ? { date: dateWhere } : {},
@@ -310,18 +311,25 @@ export async function getOverallAdCostPerJob(dateRange?: {
         ...(dateRange ? { date: dateWhere } : {}),
       },
     }),
-    prisma.job.count({
+    prisma.job.findMany({
       where: {
         status: { not: "CANCELLED" },
         ...(dateRange ? { scheduledDate: dateWhere } : {}),
       },
+      select: { invoice: { select: { payments: { select: { amount: true } } } } },
     }),
   ]);
 
   const totalAdSpend = Number(marketingSpendSum._sum.amount ?? 0) + Number(expenseSpendSum._sum.total ?? 0);
+  const totalJobsBooked = jobs.length;
+  const totalRevenue = jobs.reduce(
+    (sum, job) => sum + (job.invoice?.payments.reduce((s, p) => s + Number(p.amount), 0) ?? 0),
+    0
+  );
 
   return {
     totalAdSpend,
+    totalRevenue,
     totalJobsBooked,
     costPerJob: totalAdSpend > 0 && totalJobsBooked > 0 ? totalAdSpend / totalJobsBooked : null,
   };

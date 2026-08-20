@@ -122,7 +122,7 @@ export default function MarketingView({
           isn&apos;t Cancelled. This is your real blended cost — no need to tag each job&apos;s source for this number
           to be accurate.
         </p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-2xl border border-brand-electric/30 bg-brand-electric/5 p-5">
             <div className="text-3xl font-extrabold tabular-nums text-brand-electric">
               {overall.costPerJob !== null ? formatMoney(overall.costPerJob) : "—"}
@@ -141,6 +141,14 @@ export default function MarketingView({
             <div className="text-3xl font-extrabold tabular-nums text-ink-900">{overall.totalJobsBooked}</div>
             <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">
               Jobs Booked (excl. Cancelled)
+            </div>
+          </div>
+          <div className="rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm">
+            <div className="text-3xl font-extrabold tabular-nums text-ink-900">
+              {formatMoney(overall.totalRevenue)}
+            </div>
+            <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">
+              Revenue Generated
             </div>
           </div>
         </div>
