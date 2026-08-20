@@ -4,7 +4,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { PLATFORM_LABELS } from "@/lib/marketing";
 import type { MarketingPlatform, MarketingSpend } from "@prisma/client";
-import type { LeadSourcePerformance } from "@/lib/marketing";
+import type { LeadSourcePerformance, AdSpendSummary } from "@/lib/marketing";
 
 type SpendRow = Omit<MarketingSpend, "amount"> & { amount: number };
 
@@ -33,9 +33,11 @@ const selectClasses =
 export default function MarketingView({
   spend,
   performance,
+  adSummary,
 }: {
   spend: SpendRow[];
   performance: LeadSourcePerformance[];
+  adSummary: AdSpendSummary;
 }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
@@ -110,6 +112,36 @@ export default function MarketingView({
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Blended Ad Cost Per Job */}
+      <section>
+        <h2 className="mb-1 text-base font-bold text-ink-900">Ad Cost Per Job</h2>
+        <p className="mb-4 text-xs text-ink-900/50">
+          Combined across all paid channels (Meta Ads, Google Ads, Google LSA, Facebook Marketplace, flyers, door
+          hangers, yard signs) — excludes referrals, organic, and jobs with no source on file, since those have no ad
+          spend behind them.
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-brand-electric/30 bg-brand-electric/5 p-4">
+            <div className="text-2xl font-extrabold tabular-nums text-brand-electric">
+              {adSummary.costPerJob !== null ? formatMoney(adSummary.costPerJob) : "—"}
+            </div>
+            <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">Cost Per Job</div>
+          </div>
+          <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
+            <div className="text-2xl font-extrabold tabular-nums text-ink-900">{formatMoney(adSummary.spend)}</div>
+            <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">Ad Spend</div>
+          </div>
+          <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
+            <div className="text-2xl font-extrabold tabular-nums text-ink-900">{adSummary.jobCount}</div>
+            <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">Jobs from Ads</div>
+          </div>
+          <div className="rounded-2xl border border-ink-900/10 bg-white p-4 shadow-sm">
+            <div className="text-2xl font-extrabold tabular-nums text-ink-900">{formatMoney(adSummary.revenue)}</div>
+            <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">Revenue from Ads</div>
+          </div>
+        </div>
+      </section>
+
       {/* Source Performance */}
       <section>
         <div className="mb-4">

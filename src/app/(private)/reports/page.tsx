@@ -8,7 +8,7 @@ import {
   DATE_RANGE_PRESETS,
   type DateRangePreset,
 } from "@/lib/reports";
-import { getLeadSourcePerformance } from "@/lib/marketing";
+import { getLeadSourcePerformance, summarizeAdSpend } from "@/lib/marketing";
 import DateRangeSelector from "@/components/reports/DateRangeSelector";
 
 function formatMoney(value: number) {
@@ -65,6 +65,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
     getLeadSourcePerformance({ start: range.start, end: range.end }),
   ]);
   const profit = getProfitStats(revenue, expenses);
+  const adSummary = summarizeAdSpend(marketing);
 
   return (
     <div>
@@ -125,6 +126,15 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
         </SectionCard>
 
         <SectionCard title="Marketing (Cost Per Job Booked, by Source)" qsType="marketing" qs={qs}>
+          <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat
+              label="Blended Cost Per Job"
+              value={adSummary.costPerJob !== null ? formatMoney(adSummary.costPerJob) : "—"}
+            />
+            <Stat label="Ad Spend" value={formatMoney(adSummary.spend)} />
+            <Stat label="Jobs from Ads" value={String(adSummary.jobCount)} />
+            <Stat label="Revenue from Ads" value={formatMoney(adSummary.revenue)} />
+          </div>
           <ResponsiveTable
             headers={["Source", "Leads", "Jobs Booked", "Spend", "Revenue", "Cost Per Job", "ROAS"]}
             rows={marketing.map((r) => [

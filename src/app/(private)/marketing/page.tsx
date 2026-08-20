@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { serializeMarketingSpend, getLeadSourcePerformance } from "@/lib/marketing";
+import { serializeMarketingSpend, getLeadSourcePerformance, summarizeAdSpend } from "@/lib/marketing";
 import MarketingView from "@/components/marketing/MarketingView";
 
 export default async function MarketingPage() {
@@ -9,6 +9,7 @@ export default async function MarketingPage() {
   ]);
 
   const spend = spendRaw.map(serializeMarketingSpend);
+  const adSummary = summarizeAdSpend(performance);
 
   return (
     <div>
@@ -19,7 +20,7 @@ export default async function MarketingPage() {
         </p>
       </div>
 
-      <MarketingView spend={spend} performance={performance} />
+      <MarketingView spend={spend} performance={performance} adSummary={adSummary} />
     </div>
   );
 }

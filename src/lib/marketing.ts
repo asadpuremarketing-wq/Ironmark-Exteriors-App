@@ -15,6 +15,20 @@ export const PLATFORM_LABELS: Record<MarketingPlatform, string> = {
 
 export const MARKETING_PLATFORMS = Object.keys(PLATFORM_LABELS) as MarketingPlatform[];
 
+// Sources with a real spend-tracked platform behind them (i.e. you'd log a
+// Marketing Spend entry for it) — as opposed to Referral, Organic Google,
+// Returning Customer, "Unknown" (legacy jobs from before source tracking),
+// or Other, which have no ad spend to attribute.
+export const SOURCE_TO_PLATFORM: Record<string, MarketingPlatform | undefined> = {
+  "Facebook Ads": "META_ADS",
+  "Facebook Marketplace": "FACEBOOK_MARKETPLACE",
+  "Google Ads": "GOOGLE_ADS",
+  "Google Local Services Ads": "GOOGLE_LSA",
+  "Door Hanger": "DOOR_HANGERS",
+  Flyer: "FLYERS",
+  "Yard Sign": "YARD_SIGNS",
+};
+
 function toOptionalNumber(v: unknown) {
   if (v === undefined || v === null || v === "") return undefined;
   const n = typeof v === "string" ? Number(v) : v;
@@ -112,16 +126,6 @@ export async function getLeadSourcePerformance(
     spendByPlatform.set(row.platform, (spendByPlatform.get(row.platform) ?? 0) + Number(row.amount));
   }
 
-  const sourceToPlatform: Record<string, MarketingPlatform | undefined> = {
-    "Facebook Ads": "META_ADS",
-    "Facebook Marketplace": "FACEBOOK_MARKETPLACE",
-    "Google Ads": "GOOGLE_ADS",
-    "Google Local Services Ads": "GOOGLE_LSA",
-    "Door Hanger": "DOOR_HANGERS",
-    Flyer: "FLYERS",
-    "Yard Sign": "YARD_SIGNS",
-  };
-
   const grouped = new Map<
     string,
     { leadCount: number; jobCount: number; revenue: number }
@@ -148,7 +152,7 @@ export async function getLeadSourcePerformance(
 
   const results: LeadSourcePerformance[] = [];
   for (const [leadSource, entry] of grouped) {
-    const platform = sourceToPlatform[leadSource];
+    const platform = SOURCE_TO_PLATFORM[leadSource];
     const spend = platform ? spendByPlatform.get(platform) ?? 0 : 0;
     const conversionRate = entry.leadCount > 0 ? (entry.jobCount / entry.leadCount) * 100 : 0;
 
@@ -167,4 +171,34 @@ export async function getLeadSourcePerformance(
 
   results.sort((a, b) => b.jobCount - a.jobCount || b.leadCount - a.leadCount);
   return results;
+}
+
+export type AdSpendSummary = {
+  spend: number;
+  jobCount: number;
+  revenue: number;
+  costPerJob: number | null;
+};
+
+/**
+ * Blends every paid ad source (Meta Ads, Google Ads, Google LSA, Facebook
+ * Marketplace, Door Hanger, Flyer, Yard Sign — anything with a real
+ * MarketingSpend platform behind it) into one number: total spend across
+ * those sources ÷ total jobs booked from those sources. Deliberately
+ * excludes Referral, Organic Google, Returning Customer, Other, and
+ * "Unknown" (legacy jobs from before source tracking existed) — those have
+ * no ad spend to attribute, and mixing their revenue/job counts in would
+ * understate the real cost of the ads you're actually paying for.
+ */
+export function summarizeAdSpend(rows: LeadSourcePerformance[]): AdSpendSummary {
+  const adRows = rows.filter((r) => SOURCE_TO_PLATFORM[r.leadSource] !== undefined);
+  const spend = adRows.reduce((sum, r) => sum + r.spend, 0);
+  const jobCount = adRows.reduce((sum, r) => sum + r.jobCount, 0);
+  const revenue = adRows.reduce((sum, r) => sum + r.revenue, 0);
+  return {
+    spend,
+    jobCount,
+    revenue,
+    costPerJob: spend > 0 && jobCount > 0 ? spend / jobCount : null,
+  };
 }
