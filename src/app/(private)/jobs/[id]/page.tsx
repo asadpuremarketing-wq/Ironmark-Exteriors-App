@@ -176,6 +176,10 @@ export default async function JobDetailPage({ params }: { params: Params }) {
               <dd className="text-ink-900">{job.service}</dd>
             </div>
             <div>
+              <dt className="text-xs text-ink-900/40">Source</dt>
+              <dd className="text-ink-900">{job.bookingSource ?? "Not set"}</dd>
+            </div>
+            <div>
               <dt className="text-xs text-ink-900/40">Service Address</dt>
               <dd className="text-ink-900">
                 {[job.serviceAddress, job.city, job.province, job.postalCode].filter(Boolean).join(", ") ||

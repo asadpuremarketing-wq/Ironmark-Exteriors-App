@@ -110,26 +110,30 @@ export default function MarketingView({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Lead Source Performance */}
+      {/* Source Performance */}
       <section>
-        <h2 className="mb-4 text-base font-bold text-ink-900">Lead Source Performance</h2>
+        <div className="mb-4">
+          <h2 className="text-base font-bold text-ink-900">Source Performance</h2>
+          <p className="mt-0.5 text-xs text-ink-900/50">
+            Cost Per Job = your logged ad spend ÷ jobs actually booked from that source — every job counts here,
+            whether or not it started as a tracked lead.
+          </p>
+        </div>
         {performance.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-ink-900/15 bg-white py-12 text-center text-sm text-ink-900/50">
-            No leads yet.
+            No leads or jobs yet.
           </div>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-ink-900/10 bg-white shadow-sm">
-            <table className="w-full min-w-[760px] text-sm">
+            <table className="w-full min-w-[820px] text-sm">
               <thead>
                 <tr className="border-b border-ink-900/10 bg-ink-950/[0.02] text-left text-xs font-bold uppercase tracking-wide text-ink-900/50">
-                  <th className="px-4 py-3">Lead Source</th>
+                  <th className="px-4 py-3">Source</th>
                   <th className="px-4 py-3">Leads</th>
-                  <th className="px-4 py-3">Jobs</th>
-                  <th className="px-4 py-3">Conversion</th>
+                  <th className="px-4 py-3">Jobs Booked</th>
                   <th className="px-4 py-3">Spend</th>
                   <th className="px-4 py-3">Revenue</th>
-                  <th className="px-4 py-3">CPL</th>
-                  <th className="px-4 py-3">CAC</th>
+                  <th className="px-4 py-3">Cost Per Job</th>
                   <th className="px-4 py-3">ROAS</th>
                 </tr>
               </thead>
@@ -138,12 +142,12 @@ export default function MarketingView({
                   <tr key={p.leadSource} className="border-b border-ink-900/5 last:border-b-0">
                     <td className="px-4 py-3 font-semibold text-ink-900">{p.leadSource}</td>
                     <td className="px-4 py-3 text-ink-900/70">{p.leadCount}</td>
-                    <td className="px-4 py-3 text-ink-900/70">{p.jobCount}</td>
-                    <td className="px-4 py-3 text-ink-900/70">{p.conversionRate.toFixed(0)}%</td>
+                    <td className="px-4 py-3 font-semibold text-ink-900">{p.jobCount}</td>
                     <td className="px-4 py-3 text-ink-900/70">{formatMoney(p.spend)}</td>
                     <td className="px-4 py-3 text-ink-900/70">{formatMoney(p.revenue)}</td>
-                    <td className="px-4 py-3 text-ink-900/70">{p.cpl !== null ? formatMoney(p.cpl) : "—"}</td>
-                    <td className="px-4 py-3 text-ink-900/70">{p.cac !== null ? formatMoney(p.cac) : "—"}</td>
+                    <td className="px-4 py-3 font-bold text-brand-electric">
+                      {p.cac !== null ? formatMoney(p.cac) : "—"}
+                    </td>
                     <td className="px-4 py-3 text-ink-900/70">{p.roas !== null ? `${p.roas.toFixed(2)}x` : "—"}</td>
                   </tr>
                 ))}

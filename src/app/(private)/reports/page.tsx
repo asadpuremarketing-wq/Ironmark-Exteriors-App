@@ -124,17 +124,15 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
           />
         </SectionCard>
 
-        <SectionCard title="Marketing (Lead Source Performance)" qsType="marketing" qs={qs}>
+        <SectionCard title="Marketing (Cost Per Job Booked, by Source)" qsType="marketing" qs={qs}>
           <ResponsiveTable
-            headers={["Lead Source", "Leads", "Jobs", "Conv. Rate", "Spend", "Revenue", "CPL", "CAC", "ROAS"]}
+            headers={["Source", "Leads", "Jobs Booked", "Spend", "Revenue", "Cost Per Job", "ROAS"]}
             rows={marketing.map((r) => [
               r.leadSource,
               String(r.leadCount),
               String(r.jobCount),
-              `${r.conversionRate.toFixed(1)}%`,
               formatMoney(r.spend),
               formatMoney(r.revenue),
-              r.cpl !== null ? formatMoney(r.cpl) : "—",
               r.cac !== null ? formatMoney(r.cac) : "—",
               r.roas !== null ? `${r.roas.toFixed(2)}x` : "—",
             ])}

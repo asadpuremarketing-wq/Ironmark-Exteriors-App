@@ -81,6 +81,7 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
     where: { id },
     data: {
       service: data.service,
+      bookingSource: data.bookingSource ?? existing.bookingSource,
       serviceAddress: data.serviceAddress ?? null,
       city: data.city ?? null,
       province: data.province,

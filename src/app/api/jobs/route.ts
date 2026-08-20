@@ -106,7 +106,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Selected customer does not exist." }, { status: 400 });
   }
 
+  let leadSource: string | undefined;
   if (data.leadId) {
+    const lead = await prisma.lead.findUnique({ where: { id: data.leadId } });
+    if (!lead) {
+      return NextResponse.json({ error: "Selected lead does not exist." }, { status: 400 });
+    }
+    leadSource = lead.leadSource;
+
     const existingJobForLead = await prisma.job.findUnique({ where: { leadId: data.leadId } });
     if (existingJobForLead) {
       return NextResponse.json(
@@ -124,6 +131,9 @@ export async function POST(request: Request) {
         customerId: data.customerId,
         leadId: data.leadId,
         service: data.service,
+        // Explicit selection wins; otherwise inherit the lead's source when
+        // converting from a lead, so every job has a source either way.
+        bookingSource: data.bookingSource ?? leadSource,
         serviceAddress: data.serviceAddress,
         city: data.city,
         province: data.province,

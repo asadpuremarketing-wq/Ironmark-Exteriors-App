@@ -48,16 +48,18 @@ export type LeadSourcePerformance = {
   spend: number;
   revenue: number;
   cpl: number | null; // cost per lead
-  cac: number | null; // customer acquisition cost (cost per booked job)
+  cac: number | null; // cost per job booked = spend / jobCount
   roas: number | null; // revenue / spend
 };
 
 /**
- * Groups leads by Lead.leadSource and joins against Job (via lead) and
- * Invoice/Payment (via job) to compute conversion + spend efficiency
- * metrics per source. Invoice/Payment data doesn't exist yet in the UI
- * (Phase 2 stage 4+), so revenue/CAC/ROAS will read as 0/null until then
- * — that's expected, not a bug.
+ * Groups Leads by leadSource (for lead counts / conversion rate) and Jobs
+ * by bookingSource (for job counts / revenue / CAC) to compute per-source
+ * spend efficiency. Jobs use their own bookingSource rather than only
+ * leads that got converted — every job has a source, whether it came from
+ * a tracked lead (bookingSource copied from the lead at booking time) or
+ * was created directly. Jobs from before bookingSource existed fall back
+ * to their linked lead's source, then "Unknown" if neither is available.
  */
 export async function getLeadSourcePerformance(
   dateRange?: { start?: Date; end?: Date }
@@ -71,34 +73,36 @@ export async function getLeadSourcePerformance(
       }
     : {};
 
-  const leads = await prisma.lead.findMany({
-    where: leadWhere,
-    select: {
-      leadSource: true,
-      job: {
-        select: {
-          id: true,
-          invoice: {
-            select: {
-              total: true,
-              payments: { select: { amount: true } },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  const spendWhere = dateRange
+  const jobWhere = dateRange
     ? {
-        date: {
+        scheduledDate: {
           ...(dateRange.start ? { gte: dateRange.start } : {}),
           ...(dateRange.end ? { lte: dateRange.end } : {}),
         },
       }
     : {};
 
-  const spendRows = await prisma.marketingSpend.findMany({ where: spendWhere });
+  const [leads, jobs, spendRows] = await Promise.all([
+    prisma.lead.findMany({ where: leadWhere, select: { leadSource: true } }),
+    prisma.job.findMany({
+      where: jobWhere,
+      select: {
+        bookingSource: true,
+        lead: { select: { leadSource: true } },
+        invoice: { select: { payments: { select: { amount: true } } } },
+      },
+    }),
+    prisma.marketingSpend.findMany({
+      where: dateRange
+        ? {
+            date: {
+              ...(dateRange.start ? { gte: dateRange.start } : {}),
+              ...(dateRange.end ? { lte: dateRange.end } : {}),
+            },
+          }
+        : {},
+    }),
+  ]);
 
   // Spend is tracked per-platform, not per-lead-source. Sources map to a
   // platform 1:1 for the paid channels; organic/referral sources have no
@@ -123,18 +127,23 @@ export async function getLeadSourcePerformance(
     { leadCount: number; jobCount: number; revenue: number }
   >();
 
-  for (const lead of leads) {
-    const key = lead.leadSource;
+  function entryFor(key: string) {
     const entry = grouped.get(key) ?? { leadCount: 0, jobCount: 0, revenue: 0 };
-    entry.leadCount += 1;
-    if (lead.job) {
-      entry.jobCount += 1;
-      if (lead.job.invoice) {
-        const paid = lead.job.invoice.payments.reduce((sum, p) => sum + Number(p.amount), 0);
-        entry.revenue += paid;
-      }
-    }
     grouped.set(key, entry);
+    return entry;
+  }
+
+  for (const lead of leads) {
+    entryFor(lead.leadSource).leadCount += 1;
+  }
+
+  for (const job of jobs) {
+    const source = job.bookingSource ?? job.lead?.leadSource ?? "Unknown";
+    const entry = entryFor(source);
+    entry.jobCount += 1;
+    if (job.invoice) {
+      entry.revenue += job.invoice.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+    }
   }
 
   const results: LeadSourcePerformance[] = [];
@@ -156,6 +165,6 @@ export async function getLeadSourcePerformance(
     });
   }
 
-  results.sort((a, b) => b.leadCount - a.leadCount);
+  results.sort((a, b) => b.jobCount - a.jobCount || b.leadCount - a.leadCount);
   return results;
 }

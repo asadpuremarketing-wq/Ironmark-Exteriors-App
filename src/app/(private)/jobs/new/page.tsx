@@ -49,6 +49,7 @@ export default async function NewJobPage({ searchParams }: { searchParams: Searc
                 customerLabel: customerLabel(lead.customer),
                 leadId: lead.id,
                 service: lead.serviceRequested,
+                bookingSource: lead.leadSource,
                 serviceAddress: lead.customer.streetAddress ?? "",
                 city: lead.customer.city ?? "",
                 province: lead.customer.province,

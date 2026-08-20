@@ -126,6 +126,14 @@ model Job {
   lead   Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
 
   service          String
+  // Where this job's customer came from — copied from the lead's source
+  // when converted from a lead, or picked manually when a job is created
+  // directly (not every job goes through the Leads module). Kept as a
+  // plain string, not a relation, so source attribution never depends on
+  // a Lead record existing — that's what makes per-source revenue/CAC
+  // reporting in src/lib/marketing.ts accurate for every job, not just
+  // lead-converted ones.
+  bookingSource    String?   @map("booking_source")
   serviceAddress   String?   @map("service_address")
   city             String?
   province         String    @default("Ontario")

@@ -32,6 +32,7 @@ export default async function EditJobPage({ params }: { params: Params }) {
             customerLabel: customerLabel(job.customer),
             leadId: job.leadId ?? undefined,
             service: job.service,
+            bookingSource: job.bookingSource ?? "",
             serviceAddress: job.serviceAddress ?? "",
             city: job.city ?? "",
             province: job.province,

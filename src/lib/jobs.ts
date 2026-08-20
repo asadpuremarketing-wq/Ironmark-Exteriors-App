@@ -26,6 +26,7 @@ export const jobInputSchema = z.object({
   customerId: z.string().min(1, "A customer is required."),
   leadId: z.string().optional().transform((v) => (v ? v : undefined)),
   service: z.string().trim().min(1, "Service is required."),
+  bookingSource: z.string().trim().optional().transform((v) => (v ? v : undefined)),
   serviceAddress: z.string().trim().optional().transform((v) => (v ? v : undefined)),
   city: z.string().trim().optional().transform((v) => (v ? v : undefined)),
   province: z.string().trim().min(1).default("Ontario"),

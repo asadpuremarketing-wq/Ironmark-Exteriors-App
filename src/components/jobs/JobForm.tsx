@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { SERVICES } from "@/lib/leads";
+import { SERVICES, LEAD_SOURCES } from "@/lib/leads";
 import { PROVINCES } from "@/lib/customers";
 import { STATUS_LABELS } from "@/lib/jobs";
 import CustomerPicker from "@/components/leads/CustomerPicker";
@@ -15,6 +15,7 @@ type JobFormValues = {
   customerLabel: string;
   leadId?: string;
   service: string;
+  bookingSource: string;
   serviceAddress: string;
   city: string;
   province: string;
@@ -39,6 +40,7 @@ const emptyValues: JobFormValues = {
   customerId: "",
   customerLabel: "",
   service: SERVICES[0],
+  bookingSource: "",
   serviceAddress: "",
   city: "",
   province: "Ontario",
@@ -120,6 +122,7 @@ export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
       customerId: values.customerId,
       leadId: values.leadId,
       service: values.service,
+      bookingSource: values.bookingSource,
       serviceAddress: values.serviceAddress,
       city: values.city,
       province: values.province,
@@ -234,6 +237,24 @@ export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
                 ))}
             </select>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-semibold text-ink-900">
+            Source <span className="font-normal text-ink-900/40">(optional — how this customer found you)</span>
+          </label>
+          <select
+            value={values.bookingSource}
+            onChange={(e) => update("bookingSource", e.target.value)}
+            className={inputClasses}
+          >
+            <option value="">Not specified</option>
+            {LEAD_SOURCES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
         </div>
       </FormSection>
 
