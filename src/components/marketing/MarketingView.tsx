@@ -4,7 +4,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { PLATFORM_LABELS } from "@/lib/marketing";
 import type { MarketingPlatform, MarketingSpend } from "@prisma/client";
-import type { LeadSourcePerformance, AdSpendSummary } from "@/lib/marketing";
+import type { LeadSourcePerformance, AdSpendSummary, OverallAdCostPerJob } from "@/lib/marketing";
 
 type SpendRow = Omit<MarketingSpend, "amount"> & { amount: number };
 
@@ -34,10 +34,12 @@ export default function MarketingView({
   spend,
   performance,
   adSummary,
+  overall,
 }: {
   spend: SpendRow[];
   performance: LeadSourcePerformance[];
   adSummary: AdSpendSummary;
+  overall: OverallAdCostPerJob;
 }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
@@ -112,9 +114,41 @@ export default function MarketingView({
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Blended Ad Cost Per Job */}
+      {/* Overall Cost Per Job — total ad spend / total jobs booked, no source tagging required */}
       <section>
-        <h2 className="mb-1 text-base font-bold text-ink-900">Ad Cost Per Job</h2>
+        <h2 className="mb-1 text-base font-bold text-ink-900">Cost Per Job Booked</h2>
+        <p className="mb-4 text-xs text-ink-900/50">
+          Every dollar logged as ad spend (Marketing Spend entries + ad-category Expenses) ÷ every job booked that
+          isn&apos;t Cancelled. This is your real blended cost — no need to tag each job&apos;s source for this number
+          to be accurate.
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-brand-electric/30 bg-brand-electric/5 p-5">
+            <div className="text-3xl font-extrabold tabular-nums text-brand-electric">
+              {overall.costPerJob !== null ? formatMoney(overall.costPerJob) : "—"}
+            </div>
+            <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">Cost Per Job</div>
+          </div>
+          <div className="rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm">
+            <div className="text-3xl font-extrabold tabular-nums text-ink-900">
+              {formatMoney(overall.totalAdSpend)}
+            </div>
+            <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">
+              Total Ad Spend
+            </div>
+          </div>
+          <div className="rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm">
+            <div className="text-3xl font-extrabold tabular-nums text-ink-900">{overall.totalJobsBooked}</div>
+            <div className="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-900/50">
+              Jobs Booked (excl. Cancelled)
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Per-source breakdown — needs each job's Source tagged to be accurate */}
+      <section>
+        <h2 className="mb-1 text-base font-bold text-ink-900">Ad Cost Per Job, by Source</h2>
         <p className="mb-4 text-xs text-ink-900/50">
           Combined across all paid channels (Meta Ads, Google Ads, Google LSA, Facebook Marketplace, flyers, door
           hangers, yard signs) — excludes referrals, organic, and jobs with no source on file, since those have no ad

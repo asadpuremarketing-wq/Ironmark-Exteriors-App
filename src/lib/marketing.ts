@@ -260,3 +260,69 @@ export function summarizeAdSpend(rows: LeadSourcePerformance[]): AdSpendSummary 
     costPerJob: spend > 0 && jobCount > 0 ? spend / jobCount : null,
   };
 }
+
+export type OverallAdCostPerJob = {
+  totalAdSpend: number;
+  totalJobsBooked: number;
+  costPerJob: number | null;
+};
+
+/**
+ * The simplest, no-tagging-required version of "what am I paying per job":
+ * every dollar logged as ad/marketing spend (Marketing Spend entries, plus
+ * Expenses in an ad category — Meta Ads, Google Ads, Google LSA, Flyers,
+ * Door Hangers, Yard Signs) divided by every job booked that isn't
+ * Cancelled. Unlike summarizeAdSpend(), this doesn't require any job to
+ * have a matching Source set — it just spreads total spend across total
+ * jobs, which is what you actually want when you haven't (or don't want
+ * to) tag every job's source individually.
+ */
+export async function getOverallAdCostPerJob(dateRange?: {
+  start?: Date;
+  end?: Date;
+}): Promise<OverallAdCostPerJob> {
+  const dateWhere = dateRange
+    ? {
+        ...(dateRange.start ? { gte: dateRange.start } : {}),
+        ...(dateRange.end ? { lte: dateRange.end } : {}),
+      }
+    : {};
+
+  const adExpenseCategories: ExpenseCategory[] = [
+    "META_ADS",
+    "GOOGLE_ADS",
+    "GOOGLE_LSA",
+    "FLYERS",
+    "DOOR_HANGERS",
+    "YARD_SIGNS",
+  ];
+
+  const [marketingSpendSum, expenseSpendSum, totalJobsBooked] = await Promise.all([
+    prisma.marketingSpend.aggregate({
+      _sum: { amount: true },
+      where: dateRange ? { date: dateWhere } : {},
+    }),
+    prisma.expense.aggregate({
+      _sum: { total: true },
+      where: {
+        archivedAt: null,
+        category: { in: adExpenseCategories },
+        ...(dateRange ? { date: dateWhere } : {}),
+      },
+    }),
+    prisma.job.count({
+      where: {
+        status: { not: "CANCELLED" },
+        ...(dateRange ? { scheduledDate: dateWhere } : {}),
+      },
+    }),
+  ]);
+
+  const totalAdSpend = Number(marketingSpendSum._sum.amount ?? 0) + Number(expenseSpendSum._sum.total ?? 0);
+
+  return {
+    totalAdSpend,
+    totalJobsBooked,
+    costPerJob: totalAdSpend > 0 && totalJobsBooked > 0 ? totalAdSpend / totalJobsBooked : null,
+  };
+}

@@ -1,11 +1,17 @@
 import { prisma } from "@/lib/prisma";
-import { serializeMarketingSpend, getLeadSourcePerformance, summarizeAdSpend } from "@/lib/marketing";
+import {
+  serializeMarketingSpend,
+  getLeadSourcePerformance,
+  summarizeAdSpend,
+  getOverallAdCostPerJob,
+} from "@/lib/marketing";
 import MarketingView from "@/components/marketing/MarketingView";
 
 export default async function MarketingPage() {
-  const [spendRaw, performance] = await Promise.all([
+  const [spendRaw, performance, overall] = await Promise.all([
     prisma.marketingSpend.findMany({ orderBy: { date: "desc" } }),
     getLeadSourcePerformance(),
+    getOverallAdCostPerJob(),
   ]);
 
   const spend = spendRaw.map(serializeMarketingSpend);
@@ -20,7 +26,7 @@ export default async function MarketingPage() {
         </p>
       </div>
 
-      <MarketingView spend={spend} performance={performance} adSummary={adSummary} />
+      <MarketingView spend={spend} performance={performance} adSummary={adSummary} overall={overall} />
     </div>
   );
 }
