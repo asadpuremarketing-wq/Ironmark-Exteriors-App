@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { MarketingPlatform } from "@prisma/client";
+import type { MarketingPlatform, ExpenseCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export const PLATFORM_LABELS: Record<MarketingPlatform, string> = {
@@ -96,7 +96,32 @@ export async function getLeadSourcePerformance(
       }
     : {};
 
-  const [leads, jobs, spendRows] = await Promise.all([
+  const spendWhere = dateRange
+    ? {
+        date: {
+          ...(dateRange.start ? { gte: dateRange.start } : {}),
+          ...(dateRange.end ? { lte: dateRange.end } : {}),
+        },
+      }
+    : {};
+
+  // ExpenseCategory and MarketingPlatform share identical values for the ad
+  // categories (META_ADS, GOOGLE_ADS, GOOGLE_LSA, FLYERS, DOOR_HANGERS,
+  // YARD_SIGNS), so an ad spend logged either as a dedicated Marketing
+  // Spend entry OR as a regular Expense with one of those categories both
+  // count — people naturally log recurring ad spend through Expenses
+  // (where receipts/tax tracking already lives) rather than a separate
+  // Marketing page, and this shouldn't silently miss that money.
+  const adExpenseCategories: ExpenseCategory[] = [
+    "META_ADS",
+    "GOOGLE_ADS",
+    "GOOGLE_LSA",
+    "FLYERS",
+    "DOOR_HANGERS",
+    "YARD_SIGNS",
+  ];
+
+  const [leads, jobs, spendRows, adExpenseRows] = await Promise.all([
     prisma.lead.findMany({ where: leadWhere, select: { leadSource: true } }),
     prisma.job.findMany({
       where: jobWhere,
@@ -106,15 +131,10 @@ export async function getLeadSourcePerformance(
         invoice: { select: { payments: { select: { amount: true } } } },
       },
     }),
-    prisma.marketingSpend.findMany({
-      where: dateRange
-        ? {
-            date: {
-              ...(dateRange.start ? { gte: dateRange.start } : {}),
-              ...(dateRange.end ? { lte: dateRange.end } : {}),
-            },
-          }
-        : {},
+    prisma.marketingSpend.findMany({ where: spendWhere }),
+    prisma.expense.findMany({
+      where: { ...spendWhere, archivedAt: null, category: { in: adExpenseCategories } },
+      select: { category: true, total: true },
     }),
   ]);
 
@@ -124,6 +144,9 @@ export async function getLeadSourcePerformance(
   const spendByPlatform = new Map<string, number>();
   for (const row of spendRows) {
     spendByPlatform.set(row.platform, (spendByPlatform.get(row.platform) ?? 0) + Number(row.amount));
+  }
+  for (const row of adExpenseRows) {
+    spendByPlatform.set(row.category, (spendByPlatform.get(row.category) ?? 0) + Number(row.total));
   }
 
   const grouped = new Map<
