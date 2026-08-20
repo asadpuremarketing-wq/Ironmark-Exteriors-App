@@ -20,7 +20,8 @@ export const MARKETING_PLATFORMS = Object.keys(PLATFORM_LABELS) as MarketingPlat
 // Returning Customer, "Unknown" (legacy jobs from before source tracking),
 // or Other, which have no ad spend to attribute.
 export const SOURCE_TO_PLATFORM: Record<string, MarketingPlatform | undefined> = {
-  "Facebook Ads": "META_ADS",
+  "Meta Ads": "META_ADS",
+  "Facebook Ads": "META_ADS", // legacy label, kept so jobs/leads tagged before the rename still count
   "Facebook Marketplace": "FACEBOOK_MARKETPLACE",
   "Google Ads": "GOOGLE_ADS",
   "Google Local Services Ads": "GOOGLE_LSA",
@@ -173,13 +174,37 @@ export async function getLeadSourcePerformance(
     }
   }
 
+  // Multiple source labels can map to the same platform (e.g. legacy
+  // "Facebook Ads" and current "Meta Ads" both mean META_ADS) — merge any
+  // such rows into one, under the platform's canonical (first-listed)
+  // label, so spend is never assigned to — and summed across — more than
+  // one row for the same actual platform.
+  const canonicalLabelForPlatform = new Map<MarketingPlatform, string>();
+  for (const [source, platform] of Object.entries(SOURCE_TO_PLATFORM)) {
+    if (platform && !canonicalLabelForPlatform.has(platform)) {
+      canonicalLabelForPlatform.set(platform, source);
+    }
+  }
+  for (const [source, platform] of Object.entries(SOURCE_TO_PLATFORM)) {
+    const canonical = platform ? canonicalLabelForPlatform.get(platform) : undefined;
+    if (canonical && canonical !== source && grouped.has(source)) {
+      const alias = grouped.get(source)!;
+      const target = entryFor(canonical);
+      target.leadCount += alias.leadCount;
+      target.jobCount += alias.jobCount;
+      target.revenue += alias.revenue;
+      grouped.delete(source);
+    }
+  }
+
   // A source can have real spend logged (Marketing Spend or a matching
   // Expense category) with zero leads/jobs booked from it yet — that spend
   // still needs to show up (as a $0-job, all-cost row) rather than being
   // silently dropped because it never appeared in `leads` or `jobs` above.
-  for (const [source, platform] of Object.entries(SOURCE_TO_PLATFORM)) {
-    if (platform && (spendByPlatform.get(platform) ?? 0) > 0) {
-      entryFor(source);
+  for (const [platform, total] of spendByPlatform) {
+    const canonical = canonicalLabelForPlatform.get(platform as MarketingPlatform);
+    if (canonical && total > 0) {
+      entryFor(canonical);
     }
   }
 

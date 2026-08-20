@@ -4,7 +4,7 @@ import type { LeadStatus } from "@prisma/client";
 // Kept as a plain, curated list (not a DB enum) so new sources can be
 // added here later without a database migration.
 export const LEAD_SOURCES = [
-  "Facebook Ads",
+  "Meta Ads",
   "Facebook Marketplace",
   "Google Ads",
   "Google Local Services Ads",
