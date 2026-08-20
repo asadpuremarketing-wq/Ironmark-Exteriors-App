@@ -173,6 +173,16 @@ export async function getLeadSourcePerformance(
     }
   }
 
+  // A source can have real spend logged (Marketing Spend or a matching
+  // Expense category) with zero leads/jobs booked from it yet — that spend
+  // still needs to show up (as a $0-job, all-cost row) rather than being
+  // silently dropped because it never appeared in `leads` or `jobs` above.
+  for (const [source, platform] of Object.entries(SOURCE_TO_PLATFORM)) {
+    if (platform && (spendByPlatform.get(platform) ?? 0) > 0) {
+      entryFor(source);
+    }
+  }
+
   const results: LeadSourcePerformance[] = [];
   for (const [leadSource, entry] of grouped) {
     const platform = SOURCE_TO_PLATFORM[leadSource];
