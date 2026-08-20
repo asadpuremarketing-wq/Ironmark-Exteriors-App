@@ -8,7 +8,7 @@ import {
   DATE_RANGE_PRESETS,
   type DateRangePreset,
 } from "@/lib/reports";
-import { getLeadSourcePerformance, summarizeAdSpend } from "@/lib/marketing";
+import { getLeadSourcePerformance, getOverallAdCostPerJob } from "@/lib/marketing";
 import DateRangeSelector from "@/components/reports/DateRangeSelector";
 
 function formatMoney(value: number) {
@@ -57,15 +57,15 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
   const range = resolveDateRange(preset, { start: sp.start, end: sp.end });
   const qs = new URLSearchParams({ range: preset, ...(sp.start ? { start: sp.start } : {}), ...(sp.end ? { end: sp.end } : {}) }).toString();
 
-  const [revenue, expenses, jobsReport, leadReport, marketing] = await Promise.all([
+  const [revenue, expenses, jobsReport, leadReport, marketing, overall] = await Promise.all([
     getRevenueStats(range),
     getExpenseStats(range),
     getJobsReport(range),
     getLeadReport(range),
     getLeadSourcePerformance({ start: range.start, end: range.end }),
+    getOverallAdCostPerJob({ start: range.start, end: range.end }),
   ]);
   const profit = getProfitStats(revenue, expenses);
-  const adSummary = summarizeAdSpend(marketing);
 
   return (
     <div>
@@ -125,16 +125,17 @@ export default async function ReportsPage({ searchParams }: { searchParams: Sear
           />
         </SectionCard>
 
-        <SectionCard title="Marketing (Cost Per Job Booked, by Source)" qsType="marketing" qs={qs}>
+        <SectionCard title="Marketing (Cost Per Job Booked)" qsType="marketing" qs={qs}>
           <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Stat
-              label="Blended Cost Per Job"
-              value={adSummary.costPerJob !== null ? formatMoney(adSummary.costPerJob) : "—"}
+              label="Cost Per Job"
+              value={overall.costPerJob !== null ? formatMoney(overall.costPerJob) : "—"}
             />
-            <Stat label="Ad Spend" value={formatMoney(adSummary.spend)} />
-            <Stat label="Jobs from Ads" value={String(adSummary.jobCount)} />
-            <Stat label="Revenue from Ads" value={formatMoney(adSummary.revenue)} />
+            <Stat label="Total Ad Spend" value={formatMoney(overall.totalAdSpend)} />
+            <Stat label="Jobs Booked" value={String(overall.totalJobsBooked)} />
+            <Stat label="Revenue Generated" value={formatMoney(overall.totalRevenue)} />
           </div>
+          <p className="mb-3 text-xs text-ink-900/40">By source, where each job&apos;s Source has been tagged:</p>
           <ResponsiveTable
             headers={["Source", "Leads", "Jobs Booked", "Spend", "Revenue", "Cost Per Job", "ROAS"]}
             rows={marketing.map((r) => [
