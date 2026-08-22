@@ -64,7 +64,7 @@ function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="card-surface overflow-hidden rounded-2xl border border-ink-900/10 bg-white">
+    <section className="card-surface rounded-2xl border border-ink-900/10 bg-white">
       <div className="border-b border-ink-900/8 px-5 py-3.5">
         <h3 className="text-sm font-bold text-ink-900">{title}</h3>
         {description && <p className="mt-0.5 text-xs text-ink-900/45">{description}</p>}
