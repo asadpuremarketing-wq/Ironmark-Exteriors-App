@@ -7,12 +7,12 @@ const MAX_SIZE = 4 * 1024 * 1024; // stay under Vercel's serverless request body
 
 // Server-side upload: the browser sends the file to this route (instead of
 // going directly to Vercel Blob with a client token), and the server
-// uploads it using OIDC-based auth. Switched from the client-token flow
-// after that flow started rejecting every upload with "Cannot get token
-// from authorization header or cookie" at Vercel's blob API, even against
-// a freshly created store, pointing to a platform-side issue with that
-// auth path on this account rather than anything fixable in our token
-// setup.
+// uploads it using OIDC-based auth via the "ironmark-exteriors-app-blob"
+// public store (env vars prefixed BLOB2_, named for historical reasons
+// after the original blob store's client-token flow broke). Client
+// uploads previously failed with "Cannot get token from authorization
+// header or cookie" at Vercel's blob API on every store tried, so this
+// route uses the working OIDC path instead.
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
