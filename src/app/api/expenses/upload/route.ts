@@ -16,6 +16,12 @@ export async function POST(request: Request) {
 
   try {
     const jsonResponse = await handleUpload({
+      // TEMPORARY: testing against the new ironmark-receipts-v2 store to
+      // rule out the original store having broken/corrupted state, since
+      // the original kept rejecting uploads even after a clean reconnect.
+      // Revert to the default (process.env.BLOB_READ_WRITE_TOKEN) once
+      // we know which store actually works.
+      token: process.env.BLOB2_READ_WRITE_TOKEN,
       body,
       request,
       onBeforeGenerateToken: async () => ({
