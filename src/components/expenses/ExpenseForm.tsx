@@ -2,7 +2,6 @@
 
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
 import { CATEGORY_LABELS, PAYMENT_METHOD_LABELS } from "@/lib/expenses";
 import type { ExpenseCategory, PaymentMethod } from "@prisma/client";
 
@@ -69,11 +68,20 @@ export default function ExpenseForm({ mode, initialValues }: Props) {
     setUploadError("");
 
     try {
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/expenses/upload",
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/expenses/upload", {
+        method: "POST",
+        body: formData,
       });
-      update("receiptUrl", blob.url);
+
+      const body = await res.json();
+      if (!res.ok) {
+        throw new Error(body.error || "Failed to upload receipt.");
+      }
+
+      update("receiptUrl", body.url);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Failed to upload receipt.");
     } finally {
