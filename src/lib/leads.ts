@@ -15,13 +15,18 @@ export const LEAD_SOURCES = [
   "Door Hanger",
   "Flyer",
   "Yard Sign",
+  "Kijiji",
+  "Karrot",
   "Other",
 ] as const;
 
 export const SERVICES = [
   "Roofing",
   "Siding",
-  "Gutters",
+  "Gutter Cleaning",
+  "Gutter Installation",
+  "Gutter Repair",
+  "Downspout Repair",
   "Windows",
   "Painting",
   "Pressure Washing",
