@@ -19,6 +19,39 @@ export function isPublicBookableService(slug: string): slug is PublicBookableSer
   return Object.prototype.hasOwnProperty.call(PUBLIC_BOOKABLE_SERVICES, slug);
 }
 
+export const HOUSE_SIZES = {
+  bungalow: "Bungalow / 1-Storey",
+  "two-storey": "2-Storey",
+  bigger: "3+ Storeys / Bigger Home",
+} as const;
+
+export type HouseSize = keyof typeof HOUSE_SIZES;
+
+/**
+ * Fixed price per house size, per bookable service — the single source of
+ * truth for what a booking is allowed to charge. The client sends a
+ * houseSize choice, never a price; the server always looks the price up
+ * here so a booking can never be tampered with to book a lower price.
+ * Pressure Washing isn't priced by storey count (driveways/patios/etc.
+ * vary too much), so it has no entry and its booking flow skips the
+ * house-size question entirely.
+ */
+export const SERVICE_PRICING: Partial<Record<PublicBookableServiceSlug, Record<HouseSize, number>>> = {
+  "gutter-cleaning": { bungalow: 149, "two-storey": 199, bigger: 299 },
+  "window-cleaning": { bungalow: 149, "two-storey": 249, bigger: 349 },
+};
+
+export function isHouseSize(value: string): value is HouseSize {
+  return Object.prototype.hasOwnProperty.call(HOUSE_SIZES, value);
+}
+
+export function priceFor(service: PublicBookableServiceSlug, houseSize: HouseSize | undefined): number | null {
+  const tiers = SERVICE_PRICING[service];
+  if (!tiers) return null;
+  if (!houseSize) return null;
+  return tiers[houseSize];
+}
+
 /**
  * Fixed 2-hour slot grid, 8am-6pm. Every booking occupies one of these
  * blocks regardless of how long the job actually takes — this is what
@@ -78,24 +111,38 @@ export function isBookableSlot(startTime: string): boolean {
   return BOOKING_SLOTS.some((s) => s.startTime === startTime);
 }
 
-export const publicBookingInputSchema = z.object({
-  service: z.string().refine(isPublicBookableService, "Unknown or unbookable service."),
-  date: z.string().refine(isBookableDate, "That date is not available for booking."),
-  startTime: z.string().refine(isBookableSlot, "That time slot is not available."),
-  firstName: z.string().trim().min(1, "First name is required."),
-  lastName: z.string().trim().min(1, "Last name is required."),
-  email: z.string().trim().email("Enter a valid email address."),
-  phone: z
-    .string()
-    .trim()
-    .refine((v) => v.replace(/\D/g, "").length >= 7, "Enter a valid phone number."),
-  streetAddress: z.string().trim().min(1, "Service address is required."),
-  city: z.string().trim().min(1, "City is required."),
-  postalCode: z.string().trim().optional().transform((v) => (v ? v : undefined)),
-  notes: z.string().trim().max(1000).optional().transform((v) => (v ? v : undefined)),
-  // Honeypot: real visitors never see or fill this field.
-  company: z.string().optional(),
-});
+export const publicBookingInputSchema = z
+  .object({
+    service: z.string().refine(isPublicBookableService, "Unknown or unbookable service."),
+    date: z.string().refine(isBookableDate, "That date is not available for booking."),
+    startTime: z.string().refine(isBookableSlot, "That time slot is not available."),
+    houseSize: z
+      .string()
+      .optional()
+      .transform((v) => (v ? v : undefined))
+      .refine((v) => v === undefined || isHouseSize(v), "Unknown house size."),
+    firstName: z.string().trim().min(1, "First name is required."),
+    lastName: z.string().trim().min(1, "Last name is required."),
+    email: z.string().trim().email("Enter a valid email address."),
+    phone: z
+      .string()
+      .trim()
+      .refine((v) => v.replace(/\D/g, "").length >= 7, "Enter a valid phone number."),
+    streetAddress: z.string().trim().min(1, "Service address is required."),
+    city: z.string().trim().min(1, "City is required."),
+    postalCode: z.string().trim().optional().transform((v) => (v ? v : undefined)),
+    notes: z.string().trim().max(1000).optional().transform((v) => (v ? v : undefined)),
+    // Honeypot: real visitors never see or fill this field.
+    company: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (!isPublicBookableService(data.service)) return true; // caught by the field-level check above
+      const requiresHouseSize = Boolean(SERVICE_PRICING[data.service]);
+      return !requiresHouseSize || Boolean(data.houseSize);
+    },
+    { message: "Please select your house size.", path: ["houseSize"] }
+  );
 
 export type PublicBookingInput = z.infer<typeof publicBookingInputSchema>;
 

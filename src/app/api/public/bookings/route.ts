@@ -3,9 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { generateJobNumber } from "@/lib/jobs";
 import {
   BOOKING_SLOTS,
+  HOUSE_SIZES,
   PUBLIC_BOOKABLE_SERVICES,
   corsHeadersFor,
+  priceFor,
   publicBookingInputSchema,
+  type HouseSize,
 } from "@/lib/publicBooking";
 
 /**
@@ -42,6 +45,12 @@ export async function POST(request: Request) {
   const data = parsed.data;
   const serviceLabel = PUBLIC_BOOKABLE_SERVICES[data.service];
   const slot = BOOKING_SLOTS.find((s) => s.startTime === data.startTime)!;
+  // Price is always looked up server-side from the service + house size —
+  // never trusted from the client — so a booking can't be tampered with to
+  // charge less than the real price.
+  const houseSize = data.houseSize as HouseSize | undefined;
+  const quotedPrice = priceFor(data.service, houseSize);
+  const houseSizeLabel = houseSize ? HOUSE_SIZES[houseSize] : undefined;
 
   const dayStart = new Date(`${data.date}T00:00:00.000Z`);
   const dayEnd = new Date(`${data.date}T23:59:59.999Z`);
@@ -82,6 +91,12 @@ export async function POST(request: Request) {
 
       const jobNumber = await generateJobNumber(tx);
 
+      const bookingNoteLines = [
+        "Booked online.",
+        houseSizeLabel ? `House size: ${houseSizeLabel}` : null,
+        data.notes ?? null,
+      ].filter((line): line is string => Boolean(line));
+
       return tx.job.create({
         data: {
           jobNumber,
@@ -94,8 +109,9 @@ export async function POST(request: Request) {
           scheduledDate: dayStart,
           startTime: slot.startTime,
           endTime: slot.endTime,
+          quotedPrice: quotedPrice ?? undefined,
           status: "BOOKED",
-          notes: data.notes ? `Booked online.\n\n${data.notes}` : "Booked online.",
+          notes: bookingNoteLines.join("\n\n"),
         },
       });
       },
@@ -103,7 +119,13 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json(
-      { ok: true, jobNumber: job.jobNumber, date: data.date, slot: slot.label },
+      {
+        ok: true,
+        jobNumber: job.jobNumber,
+        date: data.date,
+        slot: slot.label,
+        price: quotedPrice,
+      },
       { status: 201, headers }
     );
   } catch (err) {
