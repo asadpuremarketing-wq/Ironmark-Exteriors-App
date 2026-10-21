@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { customerFullName } from "@/lib/customers";
 import { STATUS_LABELS, STATUS_STYLES, formatTime } from "@/lib/jobs";
 import JobStatusActions from "@/components/jobs/JobStatusActions";
+import DeleteJobButton from "@/components/jobs/DeleteJobButton";
 
 type Params = Promise<{ id: string }>;
 
@@ -18,13 +20,17 @@ function formatMoney(value: unknown) {
 
 export default async function JobDetailPage({ params }: { params: Params }) {
   const { id } = await params;
-  const job = await prisma.job.findUnique({
-    where: { id },
-    include: { customer: true, lead: true, invoice: true },
-  });
+  const [job, session] = await Promise.all([
+    prisma.job.findUnique({
+      where: { id },
+      include: { customer: true, lead: true, invoice: true },
+    }),
+    auth(),
+  ]);
   if (!job) notFound();
 
   const { customer, lead } = job;
+  const canDelete = session?.user?.role === "OWNER" || session?.user?.role === "ADMIN";
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -53,7 +59,10 @@ export default async function JobDetailPage({ params }: { params: Params }) {
           </p>
         </div>
 
-        <JobStatusActions jobId={job.id} status={job.status} quotedPrice={job.quotedPrice ? Number(job.quotedPrice) : null} />
+        <div className="flex flex-col items-end gap-2">
+          <JobStatusActions jobId={job.id} status={job.status} quotedPrice={job.quotedPrice ? Number(job.quotedPrice) : null} />
+          {canDelete && <DeleteJobButton jobId={job.id} jobNumber={job.jobNumber} />}
+        </div>
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-2">

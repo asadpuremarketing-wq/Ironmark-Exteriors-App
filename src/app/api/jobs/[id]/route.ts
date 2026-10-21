@@ -100,3 +100,38 @@ export async function PATCH(request: Request, { params }: { params: Params }) {
 
   return NextResponse.json({ job: serializeJob(job) });
 }
+
+export async function DELETE(_request: Request, { params }: { params: Params }) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  // Deleting job records is destructive — restrict to Owner/Admin, same as
+  // customer deletion.
+  if (session.user.role !== "OWNER" && session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "You do not have permission to delete jobs." }, { status: 403 });
+  }
+
+  const { id } = await params;
+
+  const existing = await prisma.job.findUnique({ where: { id }, include: { invoice: true } });
+  if (!existing) {
+    return NextResponse.json({ error: "Job not found." }, { status: 404 });
+  }
+
+  // An invoiced job carries financial history — deleting the Job would
+  // orphan that Invoice (schema sets invoice.jobId to null rather than
+  // cascading). Block it and point to cancelling instead, which keeps the
+  // record but marks it inactive.
+  if (existing.invoice) {
+    return NextResponse.json(
+      { error: "This job has an invoice attached. Cancel the job instead of deleting it, or delete the invoice first." },
+      { status: 409 }
+    );
+  }
+
+  await prisma.job.delete({ where: { id } });
+
+  return NextResponse.json({ ok: true });
+}
