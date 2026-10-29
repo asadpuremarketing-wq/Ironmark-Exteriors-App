@@ -304,11 +304,14 @@ function JobChip({ job, draggable, onDragStart }: { job: CalendarJob; draggable?
         e.dataTransfer.setData("text/plain", job.id);
         onDragStart?.();
       }}
-      className={`truncate rounded-md px-1.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[job.status]} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
-      title={`${formatTime(job.startTime) ?? ""} ${job.customer.firstName} ${job.customer.lastName} — ${job.service}`}
+      className={`rounded-md px-1.5 py-1 text-[11px] font-semibold leading-tight ${STATUS_STYLES[job.status]} ${draggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+      title={`${formatTime(job.startTime) ?? ""} ${job.customer.firstName} ${job.customer.lastName} — ${job.service}${job.city ? ` — ${job.city}` : ""}`}
     >
-      {job.startTime ? `${formatTime(job.startTime)} ` : ""}
-      {job.customer.firstName} {job.customer.lastName}
+      <div className="truncate">
+        {job.startTime ? `${formatTime(job.startTime)} ` : ""}
+        {job.customer.firstName} {job.customer.lastName}
+      </div>
+      {job.city && <div className="truncate font-normal opacity-70">📍 {job.city}</div>}
     </div>
   );
 }
@@ -421,6 +424,9 @@ function DayAgenda({ day, jobs, onJobClick }: { day: Date; jobs: CalendarJob[]; 
                   {job.customer.firstName} {job.customer.lastName}
                 </span>
                 <span className="text-ink-900/50">{job.service}</span>
+                {job.city && (
+                  <span className="inline-flex items-center gap-1 text-ink-900/50">📍 {job.city}</span>
+                )}
               </div>
               <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wide ${STATUS_STYLES[job.status]}`}>
                 {STATUS_LABELS[job.status]}
@@ -497,7 +503,10 @@ function MobileAgenda({
                           : ""}
                         {job.customer.firstName} {job.customer.lastName}
                       </div>
-                      <div className="truncate text-xs text-ink-900/50">{job.service}</div>
+                      <div className="truncate text-xs text-ink-900/50">
+                        {job.service}
+                        {job.city ? ` — 📍 ${job.city}` : ""}
+                      </div>
                     </div>
                     <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${STATUS_STYLES[job.status]}`}>
                       {STATUS_LABELS[job.status]}
