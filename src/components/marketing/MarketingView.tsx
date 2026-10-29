@@ -158,7 +158,9 @@ export default function MarketingView({
           <h2 className="text-base font-bold text-ink-900">Source Performance</h2>
           <p className="mt-0.5 text-xs text-ink-900/50">
             Cost Per Job = your logged ad spend ÷ jobs actually booked from that source — every job counts here,
-            whether or not it started as a tracked lead.
+            whether or not it started as a tracked lead. Revenue is cash actually collected; Expected Revenue is
+            the quoted/final price on this source&apos;s jobs that are booked or in progress but not yet completed —
+            it moves into Revenue automatically as those jobs get invoiced and paid.
           </p>
         </div>
         {performance.length === 0 ? (
@@ -167,7 +169,7 @@ export default function MarketingView({
           </div>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-ink-900/10 bg-white shadow-sm">
-            <table className="w-full min-w-[820px] text-sm">
+            <table className="w-full min-w-[960px] text-sm">
               <thead>
                 <tr className="border-b border-ink-900/10 bg-ink-950/[0.02] text-left text-xs font-bold uppercase tracking-wide text-ink-900/50">
                   <th className="px-4 py-3">Source</th>
@@ -175,6 +177,7 @@ export default function MarketingView({
                   <th className="px-4 py-3">Jobs Booked</th>
                   <th className="px-4 py-3">Spend</th>
                   <th className="px-4 py-3">Revenue</th>
+                  <th className="px-4 py-3">Expected Revenue</th>
                   <th className="px-4 py-3">Cost Per Job</th>
                   <th className="px-4 py-3">ROAS</th>
                 </tr>
@@ -187,6 +190,7 @@ export default function MarketingView({
                     <td className="px-4 py-3 font-semibold text-ink-900">{p.jobCount}</td>
                     <td className="px-4 py-3 text-ink-900/70">{formatMoney(p.spend)}</td>
                     <td className="px-4 py-3 text-ink-900/70">{formatMoney(p.revenue)}</td>
+                    <td className="px-4 py-3 text-amber-700">{formatMoney(p.expectedRevenue)}</td>
                     <td className="px-4 py-3 font-bold text-brand-electric">
                       {p.cac !== null ? formatMoney(p.cac) : "—"}
                     </td>

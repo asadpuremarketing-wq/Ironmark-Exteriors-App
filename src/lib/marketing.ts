@@ -61,7 +61,8 @@ export type LeadSourcePerformance = {
   jobCount: number;
   conversionRate: number; // 0-100
   spend: number;
-  revenue: number;
+  revenue: number; // actually collected (paid invoices only)
+  expectedRevenue: number; // quoted/final price on jobs not yet completed or cancelled — pipeline value
   cpl: number | null; // cost per lead
   cac: number | null; // cost per job booked = spend / jobCount
   roas: number | null; // revenue / spend
@@ -128,6 +129,9 @@ export async function getLeadSourcePerformance(
       where: jobWhere,
       select: {
         bookingSource: true,
+        status: true,
+        quotedPrice: true,
+        finalPrice: true,
         lead: { select: { leadSource: true } },
         invoice: { select: { payments: { select: { amount: true } } } },
       },
@@ -152,11 +156,11 @@ export async function getLeadSourcePerformance(
 
   const grouped = new Map<
     string,
-    { leadCount: number; jobCount: number; revenue: number }
+    { leadCount: number; jobCount: number; revenue: number; expectedRevenue: number }
   >();
 
   function entryFor(key: string) {
-    const entry = grouped.get(key) ?? { leadCount: 0, jobCount: 0, revenue: 0 };
+    const entry = grouped.get(key) ?? { leadCount: 0, jobCount: 0, revenue: 0, expectedRevenue: 0 };
     grouped.set(key, entry);
     return entry;
   }
@@ -171,6 +175,12 @@ export async function getLeadSourcePerformance(
     entry.jobCount += 1;
     if (job.invoice) {
       entry.revenue += job.invoice.payments.reduce((sum, p) => sum + Number(p.amount), 0);
+    }
+    // Pipeline value: quoted (or final, if already set) price on jobs not
+    // yet completed or cancelled — mirrors the Dashboard's Expected
+    // Revenue, but broken out per source.
+    if (job.status !== "COMPLETED" && job.status !== "CANCELLED") {
+      entry.expectedRevenue += Number(job.finalPrice ?? job.quotedPrice ?? 0);
     }
   }
 
@@ -193,6 +203,7 @@ export async function getLeadSourcePerformance(
       target.leadCount += alias.leadCount;
       target.jobCount += alias.jobCount;
       target.revenue += alias.revenue;
+      target.expectedRevenue += alias.expectedRevenue;
       grouped.delete(source);
     }
   }
@@ -221,6 +232,7 @@ export async function getLeadSourcePerformance(
       conversionRate,
       spend,
       revenue: entry.revenue,
+      expectedRevenue: entry.expectedRevenue,
       cpl: spend > 0 && entry.leadCount > 0 ? spend / entry.leadCount : null,
       cac: spend > 0 && entry.jobCount > 0 ? spend / entry.jobCount : null,
       roas: spend > 0 ? entry.revenue / spend : null,
