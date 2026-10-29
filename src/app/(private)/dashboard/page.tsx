@@ -85,22 +85,43 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
     prisma.lead.count({ where: { followUpDate: { not: null, lte: followUpDueBoundary() } } }),
   ]);
 
-  const [todaysJobs, upcomingJobs, completedJobs, nextJob] = await Promise.all([
-    prisma.job.findMany({
-      where: { scheduledDate: { gte: todayStart, lte: todayEnd } },
-      include: { customer: true },
-      orderBy: { startTime: "asc" },
-    }),
-    prisma.job.count({
-      where: { scheduledDate: { gte: todayStart }, status: { notIn: ["COMPLETED", "CANCELLED"] } },
-    }),
-    prisma.job.count({ where: { status: "COMPLETED" } }),
-    prisma.job.findFirst({
-      where: { scheduledDate: { gte: todayStart }, status: { notIn: ["COMPLETED", "CANCELLED"] } },
-      include: { customer: true },
-      orderBy: [{ scheduledDate: "asc" }, { startTime: "asc" }],
-    }),
-  ]);
+  const [todaysJobs, upcomingJobs, completedJobs, nextJob, completedJobsForRevenue, bookedJobsForRevenue] =
+    await Promise.all([
+      prisma.job.findMany({
+        where: { scheduledDate: { gte: todayStart, lte: todayEnd } },
+        include: { customer: true },
+        orderBy: { startTime: "asc" },
+      }),
+      prisma.job.count({
+        where: { scheduledDate: { gte: todayStart }, status: { notIn: ["COMPLETED", "CANCELLED"] } },
+      }),
+      prisma.job.count({ where: { status: "COMPLETED" } }),
+      prisma.job.findFirst({
+        where: { scheduledDate: { gte: todayStart }, status: { notIn: ["COMPLETED", "CANCELLED"] } },
+        include: { customer: true },
+        orderBy: [{ scheduledDate: "asc" }, { startTime: "asc" }],
+      }),
+      // Generated Revenue: every completed job's final price (falling back to
+      // the quoted price if a final price was never recorded).
+      prisma.job.findMany({
+        where: { status: "COMPLETED" },
+        select: { finalPrice: true, quotedPrice: true },
+      }),
+      // Expected Revenue: quoted price on every job still ahead of
+      // completion — moves into Generated Revenue automatically the moment
+      // a job's status flips to COMPLETED, since it then drops out of this
+      // query and into the one above.
+      prisma.job.findMany({
+        where: { status: { notIn: ["COMPLETED", "CANCELLED"] } },
+        select: { quotedPrice: true },
+      }),
+    ]);
+
+  const generatedRevenue = completedJobsForRevenue.reduce(
+    (sum, j) => sum + Number(j.finalPrice ?? j.quotedPrice ?? 0),
+    0
+  );
+  const expectedRevenue = bookedJobsForRevenue.reduce((sum, j) => sum + Number(j.quotedPrice ?? 0), 0);
 
   const operations = await getOperationsStats(range);
   const sales = await getSalesStats(range);
@@ -226,6 +247,18 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
         {stats.map((stat, i) => (
           <StatCard key={`${stat.label}-${i}`} {...stat} />
         ))}
+      </div>
+
+      <div className="mt-8">
+        <SectionHeading>Revenue</SectionHeading>
+        <p className="mb-3 text-xs text-ink-900/40">
+          Generated = final price on completed jobs. Expected = quoted price on jobs still booked or in progress.
+          A job moves from Expected to Generated the moment it&apos;s marked Completed.
+        </p>
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard label="Generated Revenue" value={formatMoney(generatedRevenue)} icon="check" />
+          <StatCard label="Expected Revenue" value={formatMoney(expectedRevenue)} icon="chart" />
+        </div>
       </div>
 
       {/* Financial section with date range */}
