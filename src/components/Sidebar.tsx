@@ -28,7 +28,17 @@ const icons: Record<string, string> = {
   megaphone: "M3 10v4h4l6 4V6l-6 4H3zm14-2a4 4 0 0 1 0 8",
   chart: "M4 20V10m6 10V4m6 16v-7",
   settings: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4 12h2m12 0h2M12 4v2m0 12v2m-5.7-13.7 1.4 1.4m8.6 8.6 1.4 1.4m0-11.4-1.4 1.4M6.3 17.7l-1.4 1.4",
+  more: "M5 12h.01M12 12h.01M19 12h.01",
 };
+
+// The 4 screens worth a one-tap reach on a phone; everything else lives
+// behind "More" (the same full nav list the hamburger menu already opens).
+const bottomTabItems = [
+  { href: "/dashboard", label: "Dashboard", icon: "grid" },
+  { href: "/calendar", label: "Calendar", icon: "calendar" },
+  { href: "/jobs", label: "Jobs", icon: "briefcase" },
+  { href: "/expenses", label: "Expenses", icon: "receipt" },
+] as const;
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -117,6 +127,46 @@ export default function Sidebar() {
         </div>
         {NavList}
       </aside>
+
+      {/* Mobile bottom tab bar — one-tap reach for the 4 most-used screens,
+          plus "More" for everything else (opens the same full nav list). */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-30 flex border-t border-white/10 bg-ink-950 pb-[env(safe-area-inset-bottom)] md:hidden"
+        aria-label="Primary"
+      >
+        {bottomTabItems.map((item) => {
+          const active = pathname === item.href || pathname?.startsWith(item.href + "/");
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+              aria-current={active ? "page" : undefined}
+              className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-semibold transition ${
+                active ? "text-brand-electric-light" : "text-white/45"
+              }`}
+            >
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d={icons[item.icon]} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {item.label}
+            </Link>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => setMobileOpen((v) => !v)}
+          aria-expanded={mobileOpen}
+          className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-semibold transition ${
+            mobileOpen ? "text-brand-electric-light" : "text-white/45"
+          }`}
+        >
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d={icons.more} strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          More
+        </button>
+      </nav>
     </>
   );
 }

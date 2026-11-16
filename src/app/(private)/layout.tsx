@@ -39,7 +39,9 @@ export default async function PrivateLayout({ children }: { children: React.Reac
             <LogoutButton />
           </div>
         </header>
-        <main className="min-w-0 flex-1 overflow-x-hidden bg-[var(--surface-app)] p-5 md:p-8">{children}</main>
+        <main className="min-w-0 flex-1 overflow-x-hidden bg-[var(--surface-app)] p-5 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:p-8">
+          {children}
+        </main>
       </div>
     </div>
   );
