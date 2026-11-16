@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -88,9 +89,7 @@ export default function Sidebar() {
     <>
       {/* Mobile top bar */}
       <div className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-white/10 bg-ink-950 px-4 md:hidden">
-        <span className="text-sm font-extrabold tracking-tight text-white">
-          IRONMARK <span className="font-light text-brand-electric-light">EXTERIORS</span>
-        </span>
+        <Image src="/logo.png" alt="Ironmark Exteriors" width={373} height={100} priority className="h-9 w-auto object-contain" />
         <button
           onClick={() => setMobileOpen((v) => !v)}
           aria-label="Toggle menu"
@@ -118,12 +117,7 @@ export default function Sidebar() {
       {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-white/10 bg-ink-950 py-6 md:flex">
         <div className="mb-8 px-5">
-          <span className="text-lg font-extrabold tracking-tight text-white">
-            IRONMARK
-          </span>
-          <div className="text-xs font-light tracking-widest text-brand-electric-light">
-            EXTERIORS
-          </div>
+          <Image src="/logo.png" alt="Ironmark Exteriors" width={373} height={100} priority className="h-12 w-auto object-contain" />
         </div>
         {NavList}
       </aside>
