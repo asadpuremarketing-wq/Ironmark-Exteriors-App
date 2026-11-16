@@ -39,17 +39,48 @@ function formatDate(date: Date | string) {
   return new Date(date).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
 }
 
-function StatCard({ label, value, icon }: { label: string; value: string; icon: string }) {
+const STAT_TONES = {
+  electric: {
+    bar: "from-brand-electric to-brand-electric-light",
+    iconBg: "bg-brand-electric/10 text-brand-electric group-hover:bg-brand-electric group-hover:text-white",
+  },
+  green: {
+    bar: "from-green-600 to-green-400",
+    iconBg: "bg-green-600/10 text-green-700 group-hover:bg-green-600 group-hover:text-white",
+  },
+  amber: {
+    bar: "from-amber-600 to-amber-400",
+    iconBg: "bg-amber-500/10 text-amber-700 group-hover:bg-amber-500 group-hover:text-white",
+  },
+} as const;
+
+function StatCard({
+  label,
+  value,
+  icon,
+  tone = "electric",
+  hint,
+}: {
+  label: string;
+  value: string;
+  icon: string;
+  tone?: keyof typeof STAT_TONES;
+  hint?: string;
+}) {
+  const t = STAT_TONES[tone];
   return (
-    <div className="card-surface card-surface-interactive group relative overflow-hidden rounded-2xl border border-ink-900/10 bg-white p-5">
-      <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-brand-electric to-brand-electric-light opacity-0 transition group-hover:opacity-100" />
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-brand-electric/10 text-brand-electric transition-colors group-hover:bg-brand-electric group-hover:text-white">
+    <div className="card-surface card-surface-interactive group relative overflow-hidden rounded-2xl border border-ink-900/10 bg-white p-4 sm:p-5">
+      <span className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${t.bar} opacity-0 transition group-hover:opacity-100`} />
+      <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg transition-colors sm:mb-4 ${t.iconBg}`}>
         <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
           <path d={icons[icon]} strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <div className="text-[1.7rem] font-extrabold leading-none tabular-nums tracking-tight text-ink-900">{value}</div>
+      <div className="text-[1.4rem] font-extrabold leading-none tabular-nums tracking-tight text-ink-900 sm:text-[1.7rem]">
+        {value}
+      </div>
       <div className="mt-2 text-[11px] font-semibold uppercase tracking-wider text-ink-900/45">{label}</div>
+      {hint && <div className="mt-1 text-[11px] text-ink-900/35">{hint}</div>}
     </div>
   );
 }
@@ -251,13 +282,21 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
 
       <div className="mt-8">
         <SectionHeading>Revenue</SectionHeading>
-        <p className="mb-3 text-xs text-ink-900/40">
-          Generated = final price on completed jobs. Expected = quoted price on jobs still booked or in progress.
-          A job moves from Expected to Generated the moment it&apos;s marked Completed.
-        </p>
         <div className="grid grid-cols-2 gap-4">
-          <StatCard label="Generated Revenue" value={formatMoney(generatedRevenue)} icon="check" />
-          <StatCard label="Expected Revenue" value={formatMoney(expectedRevenue)} icon="chart" />
+          <StatCard
+            label="Generated Revenue"
+            value={formatMoney(generatedRevenue)}
+            icon="check"
+            tone="green"
+            hint="From completed jobs"
+          />
+          <StatCard
+            label="Expected Revenue"
+            value={formatMoney(expectedRevenue)}
+            icon="chart"
+            tone="amber"
+            hint="From jobs still booked"
+          />
         </div>
       </div>
 

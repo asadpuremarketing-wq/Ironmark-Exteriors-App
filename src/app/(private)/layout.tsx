@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import Sidebar from "@/components/Sidebar";
 import LogoutButton from "@/components/LogoutButton";
+import PageHeader from "@/components/PageHeader";
 
 export default async function PrivateLayout({ children }: { children: React.ReactNode }) {
   // This is the real access-control check for every private page — the
@@ -19,8 +20,8 @@ export default async function PrivateLayout({ children }: { children: React.Reac
     <div className="flex min-h-screen flex-col md:flex-row">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="hidden h-16 items-center justify-between border-b border-ink-900/10 bg-white/80 px-6 backdrop-blur-sm md:flex">
-          <div />
+        <header className="sticky top-0 z-20 hidden h-16 items-center justify-between border-b border-ink-900/10 bg-white/80 px-6 backdrop-blur-sm md:flex">
+          <PageHeader />
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3 rounded-full border border-ink-900/10 bg-white py-1.5 pl-1.5 pr-4 shadow-sm">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-electric to-brand-electric-light text-xs font-bold text-white shadow-electric">
