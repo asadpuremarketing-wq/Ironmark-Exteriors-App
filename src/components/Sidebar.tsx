@@ -10,6 +10,7 @@ const navItems = [
   { href: "/customers", label: "Customers", ready: true, icon: "users" },
   { href: "/leads", label: "Leads", ready: true, icon: "target" },
   { href: "/jobs", label: "Jobs", ready: true, icon: "briefcase" },
+  { href: "/estimator", label: "Estimator", ready: true, icon: "calculator" },
   { href: "/calendar", label: "Calendar", ready: true, icon: "calendar" },
   { href: "/invoices", label: "Invoices", ready: true, icon: "file" },
   { href: "/expenses", label: "Expenses", ready: true, icon: "receipt" },
@@ -30,6 +31,7 @@ const icons: Record<string, string> = {
   chart: "M4 20V10m6 10V4m6 16v-7",
   settings: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4 12h2m12 0h2M12 4v2m0 12v2m-5.7-13.7 1.4 1.4m8.6 8.6 1.4 1.4m0-11.4-1.4 1.4M6.3 17.7l-1.4 1.4",
   more: "M5 12h.01M12 12h.01M19 12h.01",
+  calculator: "M6 3h12v18H6V3zm2 4h8M8 11h2m3 0h2M8 14h2m3 0h2M8 17h2m3 0h2",
 };
 
 // The 4 screens worth a one-tap reach on a phone; everything else lives

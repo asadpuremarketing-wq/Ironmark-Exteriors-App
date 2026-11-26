@@ -326,3 +326,20 @@ model ServiceReminderInterval {
 
   @@map("service_reminder_intervals")
 }
+
+// Configurable pricing inputs for the Job Estimator (one row per service).
+// Every number starts at 0 in the seed — nothing here is a guessed/assumed
+// dollar figure, it's the owner's own rates entered in Settings. The
+// estimate formula is: max(quantity * ratePerUnit + flatFee, minimumPrice).
+model PricingRate {
+  id           String   @id @default(cuid())
+  service      String   @unique
+  unitLabel    String   @default("unit") @map("unit_label")
+  ratePerUnit  Decimal  @default(0) @map("rate_per_unit") @db.Decimal(10, 2)
+  flatFee      Decimal  @default(0) @map("flat_fee") @db.Decimal(10, 2)
+  minimumPrice Decimal  @default(0) @map("minimum_price") @db.Decimal(10, 2)
+  notes        String?
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("pricing_rates")
+}

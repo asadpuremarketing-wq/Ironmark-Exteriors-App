@@ -58,6 +58,36 @@ async function main() {
   }
 
   console.log(`Service reminder intervals ready (${defaultIntervals.length} defaults).`);
+
+  // Job Estimator pricing rates. Every ratePerUnit/flatFee/minimumPrice
+  // starts at 0 — these are NOT guessed dollar amounts, just the unit
+  // structure (what you measure in) for each service. Fill in your real
+  // rates in Settings > Pricing Rates before relying on the Estimator.
+  // Upsert-only, so re-running seed never overwrites rates already entered.
+  const defaultPricingRates: { service: string; unitLabel: string }[] = [
+    { service: "Roofing", unitLabel: "square (100 sq ft)" },
+    { service: "Siding", unitLabel: "square (100 sq ft)" },
+    { service: "Gutter Cleaning", unitLabel: "linear foot" },
+    { service: "Gutter Installation", unitLabel: "linear foot" },
+    { service: "Gutter Repair", unitLabel: "linear foot" },
+    { service: "Gutter Guards", unitLabel: "linear foot" },
+    { service: "Downspout Installation", unitLabel: "downspout" },
+    { service: "Downspout Repair", unitLabel: "downspout" },
+    { service: "Soffit & Fascia Repair", unitLabel: "linear foot" },
+    { service: "Windows", unitLabel: "window" },
+    { service: "Painting", unitLabel: "sq ft" },
+    { service: "Pressure Washing", unitLabel: "sq ft" },
+  ];
+
+  for (const rate of defaultPricingRates) {
+    await prisma.pricingRate.upsert({
+      where: { service: rate.service },
+      update: {},
+      create: rate,
+    });
+  }
+
+  console.log(`Pricing rates ready (${defaultPricingRates.length} services, rates default to $0 until set).`);
 }
 
 main()

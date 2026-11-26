@@ -2,7 +2,9 @@ import { auth } from "@/auth";
 import ChangePasswordForm from "@/components/ChangePasswordForm";
 import BusinessSettingsForm from "@/components/settings/BusinessSettingsForm";
 import ServiceIntervalsForm from "@/components/settings/ServiceIntervalsForm";
+import PricingRatesForm from "@/components/settings/PricingRatesForm";
 import { getBusinessSettings, serializeBusinessSettings } from "@/lib/settings";
+import { serializePricingRate } from "@/lib/pricing";
 import { prisma } from "@/lib/prisma";
 
 export default async function SettingsPage() {
@@ -13,6 +15,8 @@ export default async function SettingsPage() {
   const businessSettingsRaw = await getBusinessSettings();
   const businessSettings = serializeBusinessSettings(businessSettingsRaw);
   const serviceIntervals = await prisma.serviceReminderInterval.findMany({ orderBy: { service: "asc" } });
+  const pricingRatesRaw = await prisma.pricingRate.findMany({ orderBy: { service: "asc" } });
+  const pricingRates = pricingRatesRaw.map(serializePricingRate);
 
   return (
     <div>
@@ -70,6 +74,14 @@ export default async function SettingsPage() {
             Service&quot; list on the Dashboard.
           </p>
           <ServiceIntervalsForm intervals={serviceIntervals} readOnly={!canEditBusiness} />
+        </div>
+
+        <div className="rounded-2xl border border-ink-900/10 bg-white p-6 shadow-sm lg:col-span-2">
+          <h2 className="mb-1 text-base font-bold text-ink-900">Pricing Rates</h2>
+          <p className="mb-5 text-sm text-ink-900/60">
+            Your real rates per service — used by the Job Estimator to suggest a quote.
+          </p>
+          <PricingRatesForm rates={pricingRates} readOnly={!canEditBusiness} />
         </div>
       </div>
     </div>
