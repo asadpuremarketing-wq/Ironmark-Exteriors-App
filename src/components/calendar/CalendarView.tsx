@@ -553,12 +553,7 @@ function MobileAgenda({
   onJobClick: (id: string) => void;
   weatherByDate: Map<string, DayForecast>;
 }) {
-  // For month view, only show days that actually have jobs plus today, to
-  // keep the list scannable instead of showing 35+ empty day rows.
-  const daysToShow =
-    viewMode === "month"
-      ? gridDays.filter((d) => (jobsByDay.get(dateKey(d))?.length ?? 0) > 0 || isTodayFn(d))
-      : gridDays;
+  const daysToShow = gridDays;
 
   if (daysToShow.length === 0) {
     return (
