@@ -17,6 +17,39 @@ import {
 } from "date-fns";
 import { STATUS_LABELS, STATUS_STYLES, formatTime } from "@/lib/jobs";
 import type { JobStatus } from "@prisma/client";
+import type { DayForecast } from "@/lib/weather";
+
+const VERDICT_STYLES: Record<DayForecast["verdict"], { dot: string; badge: string; label: string }> = {
+  GOOD: { dot: "bg-green-500", badge: "bg-green-50 text-green-700 ring-green-600/20", label: "Good to work outside" },
+  CAUTION: { dot: "bg-amber-500", badge: "bg-amber-50 text-amber-700 ring-amber-600/20", label: "Caution — check conditions" },
+  BAD: { dot: "bg-red-500", badge: "bg-red-50 text-red-700 ring-red-600/20", label: "Not safe to work outside" },
+};
+
+function WeatherDot({ forecast }: { forecast?: DayForecast }) {
+  if (!forecast) return null;
+  const style = VERDICT_STYLES[forecast.verdict];
+  const title = [
+    `${style.label}`,
+    `${Math.round(forecast.tempMinC)}°–${Math.round(forecast.tempMaxC)}°C, ${forecast.conditionLabel}`,
+    `Wind up to ${Math.round(forecast.windSpeedMaxKmh)} km/h, ${forecast.precipitationProbability}% chance of precipitation`,
+    ...forecast.reasons,
+  ].join("\n");
+  return <span className={`h-2 w-2 shrink-0 rounded-full ${style.dot}`} title={title} aria-label={title} />;
+}
+
+function WeatherBadge({ forecast }: { forecast?: DayForecast }) {
+  if (!forecast) return null;
+  const style = VERDICT_STYLES[forecast.verdict];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset ${style.badge}`}
+      title={forecast.reasons.join("\n")}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
+      {Math.round(forecast.tempMinC)}°–{Math.round(forecast.tempMaxC)}°C · {forecast.conditionLabel}
+    </span>
+  );
+}
 
 type CalendarJob = {
   id: string;
@@ -73,6 +106,8 @@ export default function CalendarView() {
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [draggingJobId, setDraggingJobId] = useState<string | null>(null);
+  const [weatherByDate, setWeatherByDate] = useState<Map<string, DayForecast>>(new Map());
+  const [weatherError, setWeatherError] = useState(false);
 
   const { rangeStart, rangeEnd, gridDays } = useMemo(() => {
     if (viewMode === "month") {
@@ -109,6 +144,25 @@ export default function CalendarView() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchJobs();
   }, [fetchJobs]);
+
+  useEffect(() => {
+    // Forecast only runs forward 16 days regardless of which month is being
+    // viewed — fetched once, not tied to navigation, and cached server-side
+    // for 30 min (see src/lib/weather.ts), so this is cheap to leave as-is.
+    fetch("/api/weather?days=16")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load weather.");
+        return res.json();
+      })
+      .then((data) => {
+        const map = new Map<string, DayForecast>();
+        for (const day of (data.forecast ?? []) as DayForecast[]) {
+          map.set(day.date, day);
+        }
+        setWeatherByDate(map);
+      })
+      .catch(() => setWeatherError(true));
+  }, []);
 
   const jobsByDay = useMemo(() => {
     const map = new Map<string, CalendarJob[]>();
@@ -253,6 +307,26 @@ export default function CalendarView() {
         <div className="mb-4 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-800">{error}</div>
       )}
 
+      {!weatherError && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-semibold text-ink-900/50">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-green-500" /> Good to work outside
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-amber-500" /> Caution
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-red-500" /> Not safe outside
+          </span>
+          <span className="text-ink-900/30">— forecast covers the next 16 days</span>
+        </div>
+      )}
+      {weatherError && (
+        <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+          Could not load the weather forecast. Job scheduling still works as usual.
+        </div>
+      )}
+
       {loading ? (
         <div className="rounded-2xl border border-dashed border-ink-900/15 bg-white py-16 text-center text-sm text-ink-900/40">
           Loading…
@@ -266,6 +340,7 @@ export default function CalendarView() {
                 day={anchor}
                 jobs={jobsByDay.get(dateKey(anchor)) ?? []}
                 onJobClick={(id) => router.push(`/jobs/${id}`)}
+                forecast={weatherByDate.get(dateKey(anchor))}
               />
             ) : (
               <MonthWeekGrid
@@ -277,6 +352,7 @@ export default function CalendarView() {
                 draggingJobId={draggingJobId}
                 setDraggingJobId={setDraggingJobId}
                 onDropOnDay={(job, newKey) => rescheduleJob(job, newKey)}
+                weatherByDate={weatherByDate}
               />
             )}
           </div>
@@ -288,6 +364,7 @@ export default function CalendarView() {
               gridDays={gridDays}
               jobsByDay={jobsByDay}
               onJobClick={(id) => router.push(`/jobs/${id}`)}
+              weatherByDate={weatherByDate}
             />
           </div>
         </>
@@ -325,6 +402,7 @@ function MonthWeekGrid({
   draggingJobId,
   setDraggingJobId,
   onDropOnDay,
+  weatherByDate,
 }: {
   gridDays: Date[];
   anchor: Date;
@@ -334,6 +412,7 @@ function MonthWeekGrid({
   draggingJobId: string | null;
   setDraggingJobId: (id: string | null) => void;
   onDropOnDay: (job: CalendarJob, newKey: string) => void;
+  weatherByDate: Map<string, DayForecast>;
 }) {
   const weekDayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -365,13 +444,16 @@ function MonthWeekGrid({
               className={`min-h-[110px] border-b border-r border-ink-900/5 p-1.5 ${dimmed ? "bg-ink-900/[0.02]" : "bg-white"}`}
             >
               <div className="mb-1 flex items-center justify-between">
-                <span
-                  className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
-                    isTodayFn(day) ? "bg-brand-electric text-white" : dimmed ? "text-ink-900/30" : "text-ink-900/70"
-                  }`}
-                >
-                  {format(day, "d")}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                      isTodayFn(day) ? "bg-brand-electric text-white" : dimmed ? "text-ink-900/30" : "text-ink-900/70"
+                    }`}
+                  >
+                    {format(day, "d")}
+                  </span>
+                  <WeatherDot forecast={weatherByDate.get(key)} />
+                </div>
                 <a
                   href={`/jobs/new?date=${key}`}
                   className="text-xs font-bold text-ink-900/30 hover:text-brand-electric"
@@ -402,11 +484,22 @@ function MonthWeekGrid({
   );
 }
 
-function DayAgenda({ day, jobs, onJobClick }: { day: Date; jobs: CalendarJob[]; onJobClick: (id: string) => void }) {
+function DayAgenda({
+  day,
+  jobs,
+  onJobClick,
+  forecast,
+}: {
+  day: Date;
+  jobs: CalendarJob[];
+  onJobClick: (id: string) => void;
+  forecast?: DayForecast;
+}) {
   return (
     <div className="overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-sm">
-      <div className="border-b border-ink-900/10 bg-ink-950/[0.02] px-5 py-3 text-sm font-bold text-ink-900">
-        {format(day, "EEEE, MMMM d")}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-900/10 bg-ink-950/[0.02] px-5 py-3">
+        <span className="text-sm font-bold text-ink-900">{format(day, "EEEE, MMMM d")}</span>
+        <WeatherBadge forecast={forecast} />
       </div>
       {jobs.length === 0 ? (
         <div className="py-10 text-center text-sm text-ink-900/40">Nothing scheduled.</div>
@@ -449,11 +542,13 @@ function MobileAgenda({
   gridDays,
   jobsByDay,
   onJobClick,
+  weatherByDate,
 }: {
   viewMode: ViewMode;
   gridDays: Date[];
   jobsByDay: Map<string, CalendarJob[]>;
   onJobClick: (id: string) => void;
+  weatherByDate: Map<string, DayForecast>;
 }) {
   // For month view, only show days that actually have jobs plus today, to
   // keep the list scannable instead of showing 35+ empty day rows.
@@ -477,11 +572,14 @@ function MobileAgenda({
         const dayJobs = jobsByDay.get(key) ?? [];
         return (
           <div key={key} className="overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-ink-900/10 bg-ink-950/[0.02] px-4 py-2.5">
-              <span className={`text-sm font-bold ${isTodayFn(day) ? "text-brand-electric" : "text-ink-900"}`}>
-                {format(day, "EEE, MMM d")}
-                {isTodayFn(day) ? " · Today" : ""}
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-900/10 bg-ink-950/[0.02] px-4 py-2.5">
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-bold ${isTodayFn(day) ? "text-brand-electric" : "text-ink-900"}`}>
+                  {format(day, "EEE, MMM d")}
+                  {isTodayFn(day) ? " · Today" : ""}
+                </span>
+                <WeatherBadge forecast={weatherByDate.get(key)} />
+              </div>
               <a href={`/jobs/new?date=${key}`} className="text-xs font-bold text-brand-electric">
                 + New
               </a>

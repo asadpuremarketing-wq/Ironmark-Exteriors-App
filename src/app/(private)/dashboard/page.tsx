@@ -17,6 +17,7 @@ import {
   type DateRangePreset,
 } from "@/lib/reports";
 import DateRangeSelector from "@/components/reports/DateRangeSelector";
+import { getDailyForecast, type DayForecast } from "@/lib/weather";
 
 const icons: Record<string, string> = {
   briefcase: "M4 8h16v11H4V8zm4-4h8v4H8V4zm-4 8h16",
@@ -176,6 +177,19 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
 
   const profit = getProfitStats(revenue, expenses);
 
+  // Weather is a nice-to-have on the dashboard — never let a failed fetch
+  // (API down, rate limited, etc.) break the whole page.
+  let nextJobForecast: DayForecast | undefined;
+  if (nextJob) {
+    try {
+      const forecast = await getDailyForecast(16);
+      const nextJobDateKey = new Date(nextJob.scheduledDate).toISOString().slice(0, 10);
+      nextJobForecast = forecast.find((f) => f.date === nextJobDateKey);
+    } catch {
+      nextJobForecast = undefined;
+    }
+  }
+
   const stats = [
     { label: "Total Customers", value: String(totalCustomers), icon: "users" },
     { label: "Total Leads", value: String(totalLeads), icon: "target" },
@@ -197,10 +211,24 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
           <div className="shadow-raised relative overflow-hidden rounded-2xl border border-brand-electric/30 bg-gradient-to-br from-brand-electric/[0.07] to-brand-electric/[0.02] p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-brand-electric">
-                  {formatDate(nextJob.scheduledDate)}
-                  {nextJob.startTime ? ` at ${formatTime(nextJob.startTime)}` : ""}
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-brand-electric">
+                    {formatDate(nextJob.scheduledDate)}
+                    {nextJob.startTime ? ` at ${formatTime(nextJob.startTime)}` : ""}
+                  </p>
+                  {nextJobForecast && nextJobForecast.verdict !== "GOOD" && (
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ring-1 ring-inset ${
+                        nextJobForecast.verdict === "BAD"
+                          ? "bg-red-50 text-red-700 ring-red-600/20"
+                          : "bg-amber-50 text-amber-700 ring-amber-600/20"
+                      }`}
+                      title={nextJobForecast.reasons.join(", ")}
+                    >
+                      {nextJobForecast.verdict === "BAD" ? "⚠ Bad weather" : "⚠ Caution"}
+                    </span>
+                  )}
+                </div>
                 <p className="mt-1 text-lg font-bold text-ink-900">
                   {customerFullName(nextJob.customer)} — {nextJob.service}
                 </p>

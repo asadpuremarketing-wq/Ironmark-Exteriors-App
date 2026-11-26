@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { SERVICES, LEAD_SOURCES } from "@/lib/leads";
@@ -8,6 +8,7 @@ import { PROVINCES } from "@/lib/customers";
 import { STATUS_LABELS } from "@/lib/jobs";
 import CustomerPicker from "@/components/leads/CustomerPicker";
 import type { Customer, JobStatus } from "@prisma/client";
+import type { DayForecast } from "@/lib/weather";
 
 type JobFormValues = {
   id?: string;
@@ -84,6 +85,17 @@ export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [duplicateJobId, setDuplicateJobId] = useState<string | null>(null);
+  const [weatherByDate, setWeatherByDate] = useState<Map<string, DayForecast>>(new Map());
+
+  useEffect(() => {
+    fetch("/api/weather?days=16")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data?.forecast) return;
+        setWeatherByDate(new Map((data.forecast as DayForecast[]).map((d) => [d.date, d])));
+      })
+      .catch(() => {});
+  }, []);
 
   function update<K extends keyof JobFormValues>(key: K, value: JobFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -315,6 +327,19 @@ export default function JobForm({ mode, initialValues, lockCustomer }: Props) {
               onChange={(e) => update("scheduledDate", e.target.value)}
               className={inputClasses}
             />
+            {(() => {
+              const forecast = weatherByDate.get(values.scheduledDate);
+              if (!forecast || forecast.verdict === "GOOD") return null;
+              const isBad = forecast.verdict === "BAD";
+              return (
+                <p
+                  className={`mt-1 text-xs font-semibold ${isBad ? "text-red-700" : "text-amber-700"}`}
+                >
+                  {isBad ? "⚠ Not safe to work outside: " : "⚠ Caution: "}
+                  {forecast.reasons.join(", ") || forecast.conditionLabel}
+                </p>
+              );
+            })()}
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-ink-900">
