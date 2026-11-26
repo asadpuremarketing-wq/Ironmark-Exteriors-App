@@ -497,9 +497,12 @@ function DayAgenda({
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-ink-900/10 bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-900/10 bg-ink-950/[0.02] px-5 py-3">
-        <span className="text-sm font-bold text-ink-900">{format(day, "EEEE, MMMM d")}</span>
-        <WeatherBadge forecast={forecast} />
+      <div className="border-b border-ink-900/10 bg-ink-950/[0.02] px-5 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm font-bold text-ink-900">{format(day, "EEEE, MMMM d")}</span>
+          <WeatherBadge forecast={forecast} />
+        </div>
+        {forecast && <p className="mt-1.5 text-xs text-ink-900/55">{forecast.summary}</p>}
       </div>
       {jobs.length === 0 ? (
         <div className="py-10 text-center text-sm text-ink-900/40">Nothing scheduled.</div>

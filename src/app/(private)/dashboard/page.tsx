@@ -40,6 +40,18 @@ function formatDate(date: Date | string) {
   return new Date(date).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
 }
 
+/**
+ * Formats a bare "YYYY-MM-DD" forecast date (as returned by the weather
+ * API) without going through `new Date()` + the server's local timezone —
+ * that round-trip can roll the date back a day whenever the server isn't
+ * running in UTC (e.g. `new Date("2026-12-02")` is UTC midnight, which is
+ * still Dec 1 evening in America/Toronto).
+ */
+function formatDateKey(dateKey: string) {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+}
+
 const STAT_TONES = {
   electric: {
     bar: "from-brand-electric to-brand-electric-light",
@@ -179,16 +191,23 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
 
   // Weather is a nice-to-have on the dashboard — never let a failed fetch
   // (API down, rate limited, etc.) break the whole page.
-  let nextJobForecast: DayForecast | undefined;
-  if (nextJob) {
-    try {
-      const forecast = await getDailyForecast(16);
-      const nextJobDateKey = new Date(nextJob.scheduledDate).toISOString().slice(0, 10);
-      nextJobForecast = forecast.find((f) => f.date === nextJobDateKey);
-    } catch {
-      nextJobForecast = undefined;
-    }
+  let forecast: DayForecast[] = [];
+  let weatherError = false;
+  try {
+    forecast = await getDailyForecast(16);
+  } catch {
+    weatherError = true;
   }
+
+  const todayKey = todayStart.toISOString().slice(0, 10);
+  const todayForecast = forecast.find((f) => f.date === todayKey);
+  const upcomingForecast = forecast.filter((f) => f.date >= todayKey);
+  const bestDaysToSchedule = upcomingForecast.filter((f) => f.verdict === "GOOD").slice(0, 6);
+  const daysToAvoid = upcomingForecast.filter((f) => f.verdict === "BAD").slice(0, 6);
+
+  const nextJobForecast = nextJob
+    ? forecast.find((f) => f.date === new Date(nextJob.scheduledDate).toISOString().slice(0, 10))
+    : undefined;
 
   const stats = [
     { label: "Total Customers", value: String(totalCustomers), icon: "users" },
@@ -270,6 +289,83 @@ export default async function DashboardPage({ searchParams }: { searchParams: Se
           </div>
         </div>
       )}
+
+      <div className="mt-8">
+        <SectionHeading>Weather &amp; Scheduling</SectionHeading>
+        {weatherError ? (
+          <div className="rounded-2xl border border-dashed border-ink-900/15 bg-white py-8 text-center text-sm text-ink-900/40">
+            Could not load the weather forecast right now.
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {todayForecast && (
+              <div
+                className={`rounded-2xl border p-5 ${
+                  todayForecast.verdict === "GOOD"
+                    ? "border-green-200 bg-green-50"
+                    : todayForecast.verdict === "CAUTION"
+                      ? "border-amber-200 bg-amber-50"
+                      : "border-red-200 bg-red-50"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-ink-900/50">Today</p>
+                  <span
+                    className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                      todayForecast.verdict === "GOOD"
+                        ? "bg-green-600 text-white"
+                        : todayForecast.verdict === "CAUTION"
+                          ? "bg-amber-600 text-white"
+                          : "bg-red-600 text-white"
+                    }`}
+                  >
+                    {todayForecast.verdict === "GOOD" ? "Safe to work" : todayForecast.verdict === "CAUTION" ? "Caution" : "Not safe"}
+                  </span>
+                </div>
+                <p className="mt-1 text-lg font-bold text-ink-900">
+                  {Math.round(todayForecast.tempMinC)}°–{Math.round(todayForecast.tempMaxC)}°C · {todayForecast.conditionLabel}
+                </p>
+                <p className="mt-2 text-sm text-ink-900/70">{todayForecast.summary}</p>
+              </div>
+            )}
+
+            <div className="rounded-2xl border border-ink-900/10 bg-white p-5 shadow-sm">
+              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-900/50">Best Days to Schedule (Next 16 Days)</p>
+              {bestDaysToSchedule.length === 0 ? (
+                <p className="text-sm text-ink-900/40">No clearly good days in the forecast window yet.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {bestDaysToSchedule.map((f) => (
+                    <span
+                      key={f.date}
+                      title={f.summary}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5 text-xs font-bold text-green-700 ring-1 ring-inset ring-green-600/20"
+                    >
+                      {formatDateKey(f.date)} · {Math.round(f.tempMaxC)}°C
+                    </span>
+                  ))}
+                </div>
+              )}
+              {daysToAvoid.length > 0 && (
+                <>
+                  <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-wide text-ink-900/50">Avoid Scheduling</p>
+                  <div className="flex flex-wrap gap-2">
+                    {daysToAvoid.map((f) => (
+                      <span
+                        key={f.date}
+                        title={f.summary}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 ring-1 ring-inset ring-red-600/20"
+                      >
+                        {formatDateKey(f.date)} · {f.conditionLabel}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="mt-8">
         <SectionHeading>Today&apos;s Jobs</SectionHeading>

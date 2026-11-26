@@ -29,6 +29,7 @@ export type DayForecast = {
   conditionLabel: string;
   verdict: WorkVerdict;
   reasons: string[]; // why it's CAUTION/BAD, empty when GOOD
+  summary: string; // one-line plain-English explanation, always present (incl. GOOD days)
 };
 
 // WMO weather codes (what Open-Meteo returns) -> short human label.
@@ -85,7 +86,7 @@ function assessDay(day: {
   windSpeedMaxKmh: number;
   windGustMaxKmh: number;
   weatherCode: number;
-}): { verdict: WorkVerdict; reasons: string[] } {
+}): { verdict: WorkVerdict; reasons: string[]; summary: string } {
   const reasons: string[] = [];
   let verdict: WorkVerdict = "GOOD";
 
@@ -126,7 +127,14 @@ function assessDay(day: {
     escalate("CAUTION", `Extreme heat (high ${Math.round(day.tempMaxC)}°C) — plan breaks/hydration`);
   }
 
-  return { verdict, reasons };
+  const summary =
+    verdict === "GOOD"
+      ? `Safe to work outside: light wind (up to ${Math.round(day.windSpeedMaxKmh)} km/h), ${
+          day.precipitationProbability
+        }% chance of precipitation, and temperatures staying above freezing — normal conditions for ladder and roof work.`
+      : `${verdict === "BAD" ? "Not safe to work outside" : "Workable with caution"}: ${reasons.join("; ")}.`;
+
+  return { verdict, reasons, summary };
 }
 
 type OpenMeteoResponse = {
@@ -187,13 +195,14 @@ export async function getDailyForecast(days: number = 16): Promise<DayForecast[]
       windGustMaxKmh: windgusts_10m_max[i],
       weatherCode: weathercode[i],
     };
-    const { verdict, reasons } = assessDay(base);
+    const { verdict, reasons, summary } = assessDay(base);
     return {
       date,
       ...base,
       conditionLabel: conditionLabel(base.weatherCode),
       verdict,
       reasons,
+      summary,
     };
   });
 }
